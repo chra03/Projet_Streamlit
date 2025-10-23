@@ -15,7 +15,7 @@ Comment les signalements d’OVNI évoluent-ils dans le temps et dans l’espace
 4. Développement d’un dashboard Streamlit interactif  
 
 
-## 🛠️ Outils utilisés
+## Outils utilisés
 - Python (Pandas, Plotly, Streamlit)
 - Git & GitHub
 - Visual Studio Code
