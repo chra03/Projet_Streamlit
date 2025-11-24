@@ -1,24 +1,40 @@
 # Projet_Streamlit
 
-# UFO Sightings Dashboard 👽
+#🚖NYC Yellow Taxi Data
 
-## Objectif
-Ce projet vise à analyser les signalements d’objets volants non identifiés (OVNI) recensés à travers le monde à partir du dataset Kaggle **[NUFORC UFO Sightings](https://www.kaggle.com/datasets/NUFORC/ufo-sightings)**.
+📌 Contexte
 
-## Problématique
-Comment les signalements d’OVNI évoluent-ils dans le temps et dans l’espace, et quelles sont leurs caractéristiques principales (forme, durée, crédibilité) ?
-
-## Étapes du projet
-1. Fusion et nettoyage des deux fichiers CSV complémentaires  
-2. Analyse exploratoire des données (EDA) avec Python et Pandas  
-3. Création de visualisations interactives avec Plotly Express  
-4. Développement d’un dashboard Streamlit interactif  
+Ce projet porte sur les données officielles des taxis jaunes de New York.
+Chaque course contient : la date, la distance, le prix, le pourboire, le type de paiement, et les zones de pickup/dropoff.
+Ces données sont idéales pour analyser la mobilité urbaine et créer des visualisations interactives.
 
 
-## Outils utilisés
-- Python (Pandas, Plotly, Streamlit)
-- Git & GitHub
-- Visual Studio Code
+🎯 Objectif
+
+Créer un dashboard interactif Streamlit permettant :
+
+-d’explorer les trajets (prix, distance, durée),
+
+-d’afficher une cartographie des zones de pickup/dropoff,
+
+-d’analyser les patterns temporels (heures, jours),
+
+-d’intégrer un modèle simple de prédiction (pourboire ou prix).
 
 
+📊 Fonctionnalités prévues
 
+KPIs : prix moyen, pourboire moyen, distance moyenne
+
+Graphiques Plotly (histogrammes, courbes temporelles, top zones)
+
+Carte interactive (Folium ou Mapbox)
+
+Prédiction ML (Random Forest)
+
+Analyse des zones NYC Taxi
+
+
+🚀 Lancer le projet
+pip install -r requirements.txt
+streamlit run accueil.py
