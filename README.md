@@ -1,6 +1,6 @@
 # Projet_Streamlit
 
-#🚖NYC Yellow Taxi Data
+🚖NYC Yellow Taxi Data
 
 📌 Contexte
 
