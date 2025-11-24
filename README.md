@@ -36,5 +36,6 @@ Analyse des zones NYC Taxi
 
 
 🚀 Lancer le projet
+
 pip install -r requirements.txt
 streamlit run accueil.py
