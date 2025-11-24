@@ -1448,26 +1448,7 @@ from taxi_ml_predictions import create_ml_visualization
 
 # ============= PREDICTIVE INSIGHTS =============
 create_ml_visualization(df, zones_coords)
-# ============= TOP ROUTES TABLE =============
-st.markdown("""
-<div class="chart-header">
-    <h2 class="chart-title">🛣️ Top 10 Routes</h2>
-    <span class="chart-badge">TRENDING</span>
-</div>
-""", unsafe_allow_html=True)
 
-top_flows = flows.nlargest(10, 'trips')[['PULocationID', 'DOLocationID', 'trips', 'total_amount', 'trip_distance']]
-top_flows['Origine'] = top_flows['PULocationID'].apply(lambda x: zones_coords.get(int(x), {}).get('name', f"Zone {x}")[:25])
-top_flows['Destination'] = top_flows['DOLocationID'].apply(lambda x: zones_coords.get(int(x), {}).get('name', f"Zone {x}")[:25])
-top_flows['Distance'] = top_flows['trip_distance'].apply(lambda x: f"{x:.1f} km")
-top_flows['Trajets'] = top_flows['trips'].apply(lambda x: f"{x:,}")
-top_flows['Revenu'] = top_flows['total_amount'].apply(lambda x: f"${x:,.0f}")
-
-st.dataframe(
-    top_flows[['Origine', 'Destination', 'Trajets', 'Revenu', 'Distance']],
-    use_container_width=True,
-    hide_index=True
-)
 
 # Footer
 st.markdown("""
