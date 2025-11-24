@@ -3,27 +3,22 @@ import pandas as pd
 import numpy as np
 import plotly.graph_objects as go
 from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import StandardScaler, LabelEncoder
-from sklearn.ensemble import RandomForestRegressor, GradientBoostingClassifier
+from sklearn.preprocessing import StandardScaler
+from sklearn.ensemble import RandomForestRegressor
 from sklearn.cluster import KMeans
 from sklearn.decomposition import PCA
-import joblib
-from datetime import datetime, timedelta
 import json
-
-# ============= ML PREDICTION MODULE =============
+from math import radians, cos, sin, asin, sqrt
 
 class TaxiMLPredictor:
     """
-    Module de prédiction ML avancé pour le dashboard NYC Taxi
+    Module de prédiction ML pour le dashboard NYC Taxi
     """
     
     def __init__(self):
         self.tip_predictor = None
-        self.congestion_classifier = None
         self.customer_clusterer = None
         self.scaler = StandardScaler()
-        self.label_encoder = LabelEncoder()
         
     def prepare_features(self, df):
         """Prépare les features pour les modèles"""
@@ -48,13 +43,31 @@ class TaxiMLPredictor:
         df['price_per_mile'] = np.where(df['trip_distance'] > 0,
                                         df['fare_amount'] / df['trip_distance'], 0)
         
-        # Features de congestion
-        df['has_congestion'] = (df['congestion_surcharge'] > 0).astype(int)
-        
-        # Airport trip
-        df['is_airport'] = (df['Airport_fee'] > 0).astype(int)
-        
         return df
+    
+    def calculate_distance(self, lat1, lon1, lat2, lon2):
+        """Calcule la distance en miles entre deux points GPS (formule de Haversine)"""
+        # Convertir en radians
+        lon1, lat1, lon2, lat2 = map(radians, [lon1, lat1, lon2, lat2])
+        
+        # Formule de Haversine
+        dlon = lon2 - lon1
+        dlat = lat2 - lat1
+        a = sin(dlat/2)**2 + cos(lat1) * cos(lat2) * sin(dlon/2)**2
+        c = 2 * asin(sqrt(a))
+        
+        # Rayon de la Terre en miles
+        miles = 3959 * c
+        return miles
+    
+    def estimate_fare(self, distance, is_rush_hour=False):
+        """Estime le tarif en fonction de la distance"""
+        base_fare = 2.50
+        per_mile = 2.50
+        rush_hour_surcharge = 1.00 if is_rush_hour else 0
+        
+        fare = base_fare + (distance * per_mile) + rush_hour_surcharge
+        return fare
     
     def train_tip_predictor(self, df):
         """Entraîne le modèle de prédiction de pourboire"""
@@ -83,37 +96,31 @@ class TaxiMLPredictor:
         
         return score, feature_importance
     
-    def train_congestion_classifier(self, df):
-        """Entraîne le classifieur de congestion"""
-        features = ['pickup_hour', 'pickup_day', 'PULocationID', 'DOLocationID',
-                   'trip_distance', 'avg_speed', 'is_rush_hour']
+    def predict_tip(self, trip_distance, fare_amount, pickup_hour, pickup_day,
+                   passenger_count, payment_type, pu_location, do_location, avg_speed):
+        """Prédit le pourboire pour une course donnée"""
+        is_weekend = 1 if pickup_day in [5, 6] else 0
+        is_rush_hour = 1 if pickup_hour in [7, 8, 9, 17, 18, 19] else 0
         
-        X = df[features].fillna(0)
-        y = df['has_congestion']
+        features = np.array([[
+            trip_distance, fare_amount, pickup_hour, pickup_day,
+            is_weekend, is_rush_hour, passenger_count, payment_type,
+            pu_location, do_location, avg_speed
+        ]])
         
-        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
-        
-        self.congestion_classifier = GradientBoostingClassifier(
-            n_estimators=100,
-            max_depth=5,
-            learning_rate=0.1,
-            random_state=42
-        )
-        self.congestion_classifier.fit(X_train, y_train)
-        
-        score = self.congestion_classifier.score(X_test, y_test)
-        return score
+        prediction = self.tip_predictor.predict(features)[0]
+        return max(0, prediction)
     
     def customer_segmentation(self, df):
         """Segmentation des clients"""
         features_cluster = ['trip_distance', 'fare_amount', 'tip_amount', 
-                           'passenger_count', 'avg_speed', 'price_per_mile']
+                           'extra', 'avg_speed']
         
         X = df[features_cluster].fillna(0)
         X_scaled = self.scaler.fit_transform(X)
         
-        # KMeans clustering
-        self.customer_clusterer = KMeans(n_clusters=5, random_state=42)
+        # KMeans clustering avec k=3
+        self.customer_clusterer = KMeans(n_clusters=3, random_state=42)
         clusters = self.customer_clusterer.fit_predict(X_scaled)
         
         # PCA pour visualisation
@@ -122,25 +129,11 @@ class TaxiMLPredictor:
         
         cluster_names = {
             0: "Économique",
-            1: "Business",
-            2: "Touriste",
-            3: "Longue Distance",
-            4: "Premium"
+            1: "Standard",
+            2: "Premium"
         }
         
         return X_pca, clusters, cluster_names
-    
-    def predict_optimal_route_revenue(self, zone_id, hour, day):
-        """Prédit le revenu optimal pour une zone et un temps donné"""
-        # Simulation de prédiction (à remplacer par un vrai modèle)
-        base_revenue = np.random.uniform(15, 45)
-        hour_factor = 1.5 if hour in [7,8,9,17,18,19] else 1.0
-        weekend_factor = 1.2 if day in [5, 6] else 1.0
-        
-        predicted_revenue = base_revenue * hour_factor * weekend_factor
-        confidence = np.random.uniform(0.7, 0.95)
-        
-        return predicted_revenue, confidence
 
 
 def create_ml_visualization(df, zones_coords):
@@ -159,490 +152,291 @@ def create_ml_visualization(df, zones_coords):
     # Préparer les données
     df_ml = predictor.prepare_features(df)
     
+    # Entraîner le modèle
+    score, feature_importance = predictor.train_tip_predictor(df_ml)
+    
     # Tabs pour différentes analyses
-    tab1, tab2, tab3, tab4 = st.tabs([
+    tab1, tab2 = st.tabs([
         "🎯 Prédiction de Pourboire",
-        "🚦 Analyse de Congestion",
-        "👥 Segmentation Clients",
-        "📊 Optimisation Revenue"
+        "👥 Segmentation Clients"
     ])
     
     with tab1:
-        st.markdown("### Prédiction du Pourboire avec Random Forest")
+        st.markdown("### 🔮 Prédicteur de Pourboire avec Random Forest")
         
         col1, col2 = st.columns([2, 1])
         
         with col1:
-            # Entraîner le modèle
-            score, feature_importance = predictor.train_tip_predictor(df_ml)
+            st.markdown(f"""
+            <div style="background: var(--bg-tertiary); border: 1px solid var(--border-color); 
+                 border-radius: 12px; padding: 1rem; margin-bottom: 1.5rem;">
+                <p style="color: var(--text-secondary); margin: 0;">
+                    <strong style="color: var(--accent-green);">Modèle entraîné</strong> • 
+                    Score R²: <strong style="color: var(--accent-blue);">{score:.2%}</strong> • 
+                    Random Forest avec 100 arbres
+                </p>
+            </div>
+            """, unsafe_allow_html=True)
             
-            # Visualisation D3.js des feature importances
-            d3_features_data = {
-                'features': feature_importance['feature'].tolist()[:10],
-                'importances': feature_importance['importance'].tolist()[:10]
+            st.markdown("#### 🗺️ Itinéraire du Trajet")
+            
+            # Zones populaires avec coordonnées
+            popular_zones = {
+                'Manhattan Midtown': {'id': 161, 'lat': 40.7580, 'lon': -73.9855},
+                'JFK Airport': {'id': 132, 'lat': 40.6413, 'lon': -73.7781},
+                'LaGuardia Airport': {'id': 138, 'lat': 40.7769, 'lon': -73.8740},
+                'Times Square': {'id': 236, 'lat': 40.7580, 'lon': -73.9855},
+                'Upper East Side': {'id': 237, 'lat': 40.7736, 'lon': -73.9566},
+                'Upper West Side': {'id': 238, 'lat': 40.7870, 'lon': -73.9754},
+                'East Village': {'id': 79, 'lat': 40.7264, 'lon': -73.9818},
+                'Financial District': {'id': 87, 'lat': 40.7074, 'lon': -74.0113},
+                'Brooklyn Heights': {'id': 61, 'lat': 40.6958, 'lon': -73.9961},
+                'Williamsburg': {'id': 265, 'lat': 40.7081, 'lon': -73.9571},
+                'Central Park': {'id': 43, 'lat': 40.7829, 'lon': -73.9654},
+                'Chelsea': {'id': 68, 'lat': 40.7465, 'lon': -74.0014},
+                'SoHo': {'id': 211, 'lat': 40.7233, 'lon': -74.0030},
+                'Greenwich Village': {'id': 114, 'lat': 40.7336, 'lon': -74.0027}
             }
             
-            html_features = f"""
-            <!DOCTYPE html>
-            <html>
-            <head>
-                <script src="https://d3js.org/d3.v7.min.js"></script>
-                <style>
-                    body {{ 
-                        font-family: 'Inter', sans-serif; 
-                        background: #141414;
-                        margin: 0;
-                        padding: 20px;
-                    }}
-                    .bar {{
-                        fill: url(#gradient);
-                        cursor: pointer;
-                        transition: all 0.3s ease;
-                    }}
-                    .bar:hover {{
-                        filter: brightness(1.2);
-                        transform: scaleX(1.02);
-                    }}
-                    .label {{
-                        fill: #ffffff;
-                        font-size: 12px;
-                        font-weight: 600;
-                    }}
-                    .value {{
-                        fill: #00ff88;
-                        font-size: 11px;
-                        font-weight: 700;
-                    }}
-                    .title {{
-                        fill: #ff006e;
-                        font-size: 16px;
-                        font-weight: 700;
-                    }}
-                    .axis {{
-                        stroke: #3a3a3a;
-                    }}
-                    .axis text {{
-                        fill: #a8a8a8;
-                        font-size: 10px;
-                    }}
-                    .tooltip {{
-                        position: absolute;
-                        padding: 12px;
-                        background: linear-gradient(135deg, rgba(20,20,20,0.98), rgba(30,30,30,0.98));
-                        border: 1px solid #ff006e;
-                        border-radius: 8px;
-                        color: white;
-                        font-size: 12px;
-                        pointer-events: none;
-                        opacity: 0;
-                        transition: opacity 0.3s;
-                        box-shadow: 0 8px 24px rgba(0,0,0,0.6);
-                    }}
-                </style>
-            </head>
-            <body>
-                <div id="features-chart"></div>
-                <div class="tooltip" id="tooltip"></div>
-                <script>
-                    const data = {json.dumps(d3_features_data)};
-                    
-                    const margin = {{top: 40, right: 40, bottom: 60, left: 150}};
-                    const width = 600 - margin.left - margin.right;
-                    const height = 400 - margin.top - margin.bottom;
-                    
-                    const svg = d3.select("#features-chart")
-                        .append("svg")
-                        .attr("width", width + margin.left + margin.right)
-                        .attr("height", height + margin.top + margin.bottom);
-                    
-                    // Gradient
-                    const gradient = svg.append("defs")
-                        .append("linearGradient")
-                        .attr("id", "gradient")
-                        .attr("x1", "0%")
-                        .attr("x2", "100%");
-                    
-                    gradient.append("stop")
-                        .attr("offset", "0%")
-                        .attr("stop-color", "#ff006e");
-                    
-                    gradient.append("stop")
-                        .attr("offset", "100%")
-                        .attr("stop-color", "#00d4ff");
-                    
-                    const g = svg.append("g")
-                        .attr("transform", `translate(${{margin.left}},${{margin.top}})`);
-                    
-                    // Title
-                    g.append("text")
-                        .attr("class", "title")
-                        .attr("x", width / 2)
-                        .attr("y", -20)
-                        .attr("text-anchor", "middle")
-                        .text("🎯 Importance des Variables - Score: {score:.2%}");
-                    
-                    // Scales
-                    const x = d3.scaleLinear()
-                        .domain([0, d3.max(data.importances)])
-                        .range([0, width]);
-                    
-                    const y = d3.scaleBand()
-                        .domain(data.features)
-                        .range([0, height])
-                        .padding(0.2);
-                    
-                    // Bars with animation
-                    const bars = g.selectAll(".bar")
-                        .data(data.features)
-                        .enter()
-                        .append("rect")
-                        .attr("class", "bar")
-                        .attr("y", d => y(d))
-                        .attr("height", y.bandwidth())
-                        .attr("x", 0)
-                        .attr("width", 0)
-                        .attr("rx", 4)
-                        .on("mouseover", function(event, d) {{
-                            const idx = data.features.indexOf(d);
-                            const importance = (data.importances[idx] * 100).toFixed(1);
-                            
-                            d3.select("#tooltip")
-                                .style("opacity", 1)
-                                .style("left", (event.pageX + 10) + "px")
-                                .style("top", (event.pageY - 10) + "px")
-                                .html(`<strong>${{d}}</strong><br>Importance: ${{importance}}%`);
-                            
-                            d3.select(this)
-                                .style("filter", "brightness(1.3) drop-shadow(0 0 20px rgba(255,0,110,0.8))");
-                        }})
-                        .on("mouseout", function() {{
-                            d3.select("#tooltip").style("opacity", 0);
-                            d3.select(this).style("filter", "brightness(1)");
-                        }});
-                    
-                    // Animate bars
-                    bars.transition()
-                        .duration(1000)
-                        .delay((d, i) => i * 100)
-                        .attr("width", (d, i) => x(data.importances[i]))
-                        .ease(d3.easeElastic);
-                    
-                    // Labels
-                    g.selectAll(".label")
-                        .data(data.features)
-                        .enter()
-                        .append("text")
-                        .attr("class", "label")
-                        .attr("x", -5)
-                        .attr("y", d => y(d) + y.bandwidth() / 2)
-                        .attr("text-anchor", "end")
-                        .attr("alignment-baseline", "middle")
-                        .text(d => d);
-                    
-                    // Values
-                    g.selectAll(".value")
-                        .data(data.features)
-                        .enter()
-                        .append("text")
-                        .attr("class", "value")
-                        .attr("x", (d, i) => x(data.importances[i]) + 5)
-                        .attr("y", d => y(d) + y.bandwidth() / 2)
-                        .attr("alignment-baseline", "middle")
-                        .style("opacity", 0)
-                        .text((d, i) => (data.importances[i] * 100).toFixed(1) + "%")
-                        .transition()
-                        .delay(1500)
-                        .duration(500)
-                        .style("opacity", 1);
-                </script>
-            </body>
-            </html>
-            """
+            col_zone1, col_zone2 = st.columns(2)
             
-            st.components.v1.html(html_features, height=450)
+            with col_zone1:
+                pu_zone_name = st.selectbox(
+                    "🟢 Zone de départ", 
+                    list(popular_zones.keys()),
+                    help="Sélectionnez la zone de pickup"
+                )
+            
+            with col_zone2:
+                do_zone_name = st.selectbox(
+                    "🔴 Zone d'arrivée", 
+                    list(popular_zones.keys()),
+                    index=1,
+                    help="Sélectionnez la zone de dropoff"
+                )
+            
+            # Calculer automatiquement la distance
+            pu_data = popular_zones[pu_zone_name]
+            do_data = popular_zones[do_zone_name]
+            
+            calculated_distance = predictor.calculate_distance(
+                pu_data['lat'], pu_data['lon'],
+                do_data['lat'], do_data['lon']
+            )
+            
+            # Afficher la distance calculée
+            st.markdown(f"""
+            <div style="background: linear-gradient(135deg, #8b5cf615, #8b5cf605); 
+                 border: 1px solid #8b5cf6; border-radius: 12px; padding: 1rem; margin: 1rem 0;">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <span style="color: #a8a8a8;">📏 Distance calculée:</span>
+                    <span style="color: #8b5cf6; font-size: 1.5rem; font-weight: 700;">
+                        {calculated_distance:.2f} miles
+                    </span>
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
+            
+            st.markdown("#### ⚙️ Paramètres de la Course")
+            
+            col_param1, col_param2 = st.columns(2)
+            
+            with col_param1:
+                pickup_hour = st.slider(
+                    "🕐 Heure de pickup", 
+                    0, 23, 12,
+                    help="Heure de prise en charge (0-23h)"
+                )
+                
+                day_names = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche']
+                pickup_day = st.selectbox(
+                    "📅 Jour de la semaine", 
+                    range(7), 
+                    format_func=lambda x: day_names[x],
+                    help="Jour de la semaine"
+                )
+            
+            with col_param2:
+                passenger_count = st.slider(
+                    "👥 Nombre de passagers", 
+                    1, 6, 1,
+                    help="Nombre de passagers dans le taxi"
+                )
+                
+                payment_type = st.selectbox(
+                    "💳 Type de paiement", 
+                    [1, 2], 
+                    format_func=lambda x: "Carte bancaire" if x == 1 else "Espèces",
+                    help="Mode de paiement"
+                )
+            
+            # Calculer la vitesse moyenne estimée (basée sur l'heure et la distance)
+            is_rush = pickup_hour in [7, 8, 9, 17, 18, 19]
+            if is_rush:
+                avg_speed = max(10, 20 - (calculated_distance * 0.5))  # Plus lent en rush hour
+            else:
+                avg_speed = min(35, 25 + (calculated_distance * 0.3))  # Plus rapide hors rush
+            
+            # Calculer le tarif estimé
+            estimated_fare = predictor.estimate_fare(calculated_distance, is_rush)
+            
+            st.markdown(f"""
+            <div style="background: var(--bg-tertiary); border: 1px solid var(--border-color); 
+                 border-radius: 12px; padding: 1rem; margin: 1rem 0;">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                    <div>
+                        <span style="color: #a8a8a8; font-size: 0.875rem;">💵 Tarif estimé:</span>
+                        <div style="color: #00d4ff; font-size: 1.25rem; font-weight: 700;">
+                            ${estimated_fare:.2f}
+                        </div>
+                    </div>
+                    <div>
+                        <span style="color: #a8a8a8; font-size: 0.875rem;">⚡ Vitesse estimée:</span>
+                        <div style="color: #00ff88; font-size: 1.25rem; font-weight: 700;">
+                            {avg_speed:.0f} mph
+                        </div>
+                    </div>
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
+            
+            st.markdown("<br>", unsafe_allow_html=True)
+            
+            if st.button("🎯 PRÉDIRE LE POURBOIRE", use_container_width=True, type="primary"):
+                # Faire la prédiction
+                predicted_tip = predictor.predict_tip(
+                    calculated_distance, estimated_fare, pickup_hour, pickup_day,
+                    passenger_count, payment_type, pu_data['id'], do_data['id'], avg_speed
+                )
+                
+                tip_percentage = (predicted_tip / estimated_fare * 100) if estimated_fare > 0 else 0
+                total_amount = estimated_fare + predicted_tip
+                
+                st.markdown("<br>", unsafe_allow_html=True)
+                st.markdown("### 📊 Résultats de la Prédiction")
+                
+                col_res1, col_res2, col_res3 = st.columns(3)
+                
+                with col_res1:
+                    st.markdown(f"""
+                    <div style="background: linear-gradient(135deg, #ff006e15, #ff006e05); 
+                         border: 2px solid #ff006e; border-radius: 16px; padding: 2rem; text-align: center;">
+                        <div style="font-size: 3rem; margin-bottom: 0.5rem;">💵</div>
+                        <div style="font-size: 2.5rem; font-weight: 700; color: #ff006e; margin-bottom: 0.5rem;">
+                            ${predicted_tip:.2f}
+                        </div>
+                        <div style="font-size: 0.875rem; color: #a8a8a8; text-transform: uppercase; letter-spacing: 0.05em;">
+                            Pourboire Prédit
+                        </div>
+                    </div>
+                    """, unsafe_allow_html=True)
+                
+                with col_res2:
+                    st.markdown(f"""
+                    <div style="background: linear-gradient(135deg, #00d4ff15, #00d4ff05); 
+                         border: 2px solid #00d4ff; border-radius: 16px; padding: 2rem; text-align: center;">
+                        <div style="font-size: 3rem; margin-bottom: 0.5rem;">📊</div>
+                        <div style="font-size: 2.5rem; font-weight: 700; color: #00d4ff; margin-bottom: 0.5rem;">
+                            {tip_percentage:.1f}%
+                        </div>
+                        <div style="font-size: 0.875rem; color: #a8a8a8; text-transform: uppercase; letter-spacing: 0.05em;">
+                            Pourcentage
+                        </div>
+                    </div>
+                    """, unsafe_allow_html=True)
+                
+                with col_res3:
+                    st.markdown(f"""
+                    <div style="background: linear-gradient(135deg, #00ff8815, #00ff8805); 
+                         border: 2px solid #00ff88; border-radius: 16px; padding: 2rem; text-align: center;">
+                        <div style="font-size: 3rem; margin-bottom: 0.5rem;">💰</div>
+                        <div style="font-size: 2.5rem; font-weight: 700; color: #00ff88; margin-bottom: 0.5rem;">
+                            ${total_amount:.2f}
+                        </div>
+                        <div style="font-size: 0.875rem; color: #a8a8a8; text-transform: uppercase; letter-spacing: 0.05em;">
+                            Total Course
+                        </div>
+                    </div>
+                    """, unsafe_allow_html=True)
+                
+                # Comparaison avec la moyenne
+                avg_tip = df_ml['tip_amount'].mean()
+                comparison = "supérieur" if predicted_tip > avg_tip else "inférieur"
+                diff_pct = abs((predicted_tip - avg_tip) / avg_tip * 100)
+                
+                is_weekend = pickup_day in [5, 6]
+                
+                st.markdown(f"""
+                <div style="background: var(--bg-tertiary); border: 1px solid var(--border-color); 
+                     border-radius: 12px; padding: 1.5rem; margin-top: 1.5rem; border-left: 4px solid #8b5cf6;">
+                    <h4 style="color: #8b5cf6; margin-top: 0;">📈 Analyse Détaillée</h4>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; color: var(--text-secondary); line-height: 1.8;">
+                        <div>
+                            <p><strong style="color: #fff;">Trajet:</strong></p>
+                            <p>🟢 {pu_zone_name}</p>
+                            <p>🔴 {do_zone_name}</p>
+                            <p>📏 {calculated_distance:.2f} miles</p>
+                        </div>
+                        <div>
+                            <p><strong style="color: #fff;">Contexte:</strong></p>
+                            <p>{'🔥 Rush hour' if is_rush else '✨ Heure normale'}</p>
+                            <p>{'🎉 Weekend' if is_weekend else '💼 Semaine'}</p>
+                            <p>{'💳 Carte' if payment_type == 1 else '💵 Cash'}</p>
+                        </div>
+                    </div>
+                    <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid #2a2a2a;">
+                        <p>Le pourboire prédit est <strong style="color: {'#00ff88' if predicted_tip > avg_tip else '#ff006e'};">
+                        {comparison}</strong> à la moyenne de <strong>${avg_tip:.2f}</strong> 
+                        (différence: <strong style="color: #00d4ff;">{diff_pct:.1f}%</strong>)</p>
+                    </div>
+                </div>
+                """, unsafe_allow_html=True)
         
         with col2:
             st.markdown("""
             <div class="guide-box">
-                <h4>Métriques du Modèle</h4>
-                <p><strong>Algorithme:</strong> Random Forest</p>
-                <p><strong>Arbres:</strong> 100</p>
-                <p><strong>Profondeur:</strong> 15</p>
-                <p><strong>Score R²:</strong> {:.2%}</p>
+                <h4>💡 Guide d'Utilisation</h4>
+                <p><strong>1. Sélection Itinéraire:</strong></p>
+                <p>• Choisissez départ et arrivée</p>
+                <p>• Distance calculée automatiquement</p>
+                <p>• Tarif estimé selon le trajet</p>
                 
-                <p style="margin-top: 20px;"><strong>💡 Insights:</strong></p>
-                <p>• Distance et tarif sont les facteurs clés</p>
-                <p>• Les heures de pointe influencent le pourboire</p>
-                <p>• Les trajets aéroport ont +30% de tips</p>
-            </div>
+                <p><strong>2. Facteurs Temporels:</strong></p>
+                <p>• Rush hours (7-9h, 17-19h)</p>
+                <p>• Weekend vs Semaine</p>
+                <p>• Impact sur vitesse et tarif</p>
+                
+                <p><strong>3. Autres Paramètres:</strong></p>
+                <p>• Type de paiement (carte = + tips)</p>
+                <p>• Nombre de passagers</p>
+                <p>• Zones premium (aéroports)</p>
+                
+                <p style="margin-top: 20px;"><strong>🎯 Précision:</strong></p>
+                <p>Score R² du modèle: <strong style="color: #00ff88;">{:.1%}</strong></p>
+                
+                <p style="margin-top: 20px;"><strong>🔝 Top Variables:</strong></p>
             """.format(score), unsafe_allow_html=True)
-    
-    with tab2:
-        st.markdown("### Prédiction de Congestion en Temps Réel")
-        
-        # Entraîner le classifieur
-        congestion_score = predictor.train_congestion_classifier(df_ml)
-        
-        # Créer une matrice de congestion par heure et zone
-        congestion_matrix = df_ml.groupby(['pickup_hour', 'PULocationID'])['has_congestion'].mean()
-        
-        # Top 20 zones pour la visualisation
-        top_zones = df_ml['PULocationID'].value_counts().head(20).index
-        
-        # Préparer les données pour D3.js heatmap interactive
-        heatmap_data = []
-        for hour in range(24):
-            for zone in top_zones:
-                try:
-                    value = congestion_matrix.loc[(hour, zone)]
-                except:
-                    value = 0
-                heatmap_data.append({
-                    'hour': hour,
-                    'zone': int(zone),
-                    'zone_name': zones_coords.get(zone, {}).get('name', f'Zone {zone}')[:15],
-                    'congestion': value
-                })
-        
-        # Visualisation D3.js Heatmap Interactive
-        html_heatmap = f"""
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <script src="https://d3js.org/d3.v7.min.js"></script>
-            <style>
-                body {{ 
-                    font-family: 'Inter', sans-serif; 
-                    background: #141414;
-                    margin: 0;
-                    padding: 20px;
-                }}
-                .cell {{
-                    stroke: #2a2a2a;
-                    stroke-width: 1;
-                    cursor: pointer;
-                    transition: all 0.2s ease;
-                }}
-                .cell:hover {{
-                    stroke: #ff006e;
-                    stroke-width: 2;
-                    filter: brightness(1.3);
-                }}
-                .hour-label, .zone-label {{
-                    fill: #a8a8a8;
-                    font-size: 10px;
-                }}
-                .title {{
-                    fill: #00d4ff;
-                    font-size: 16px;
-                    font-weight: 700;
-                }}
-                .tooltip {{
-                    position: absolute;
-                    padding: 12px;
-                    background: rgba(10,10,10,0.95);
-                    border: 1px solid #00d4ff;
-                    border-radius: 8px;
-                    color: white;
-                    font-size: 12px;
-                    pointer-events: none;
-                    opacity: 0;
-                    transition: opacity 0.3s;
-                }}
-                .legend {{
-                    font-size: 11px;
-                    fill: #a8a8a8;
-                }}
-            </style>
-        </head>
-        <body>
-            <div id="heatmap"></div>
-            <div class="tooltip" id="tooltip"></div>
-            <script>
-                const data = {json.dumps(heatmap_data)};
-                
-                const margin = {{top: 60, right: 100, bottom: 40, left: 150}};
-                const width = 800 - margin.left - margin.right;
-                const height = 500 - margin.top - margin.bottom;
-                
-                const svg = d3.select("#heatmap")
-                    .append("svg")
-                    .attr("width", width + margin.left + margin.right)
-                    .attr("height", height + margin.top + margin.bottom);
-                
-                const g = svg.append("g")
-                    .attr("transform", `translate(${{margin.left}},${{margin.top}})`);
-                
-                // Title
-                g.append("text")
-                    .attr("class", "title")
-                    .attr("x", width / 2)
-                    .attr("y", -30)
-                    .attr("text-anchor", "middle")
-                    .text("🚦 Carte de Congestion Prédictive - Précision: {congestion_score:.1%}");
-                
-                const hours = [...new Set(data.map(d => d.hour))];
-                const zones = [...new Set(data.map(d => d.zone_name))];
-                
-                const x = d3.scaleBand()
-                    .domain(hours)
-                    .range([0, width])
-                    .padding(0.05);
-                
-                const y = d3.scaleBand()
-                    .domain(zones)
-                    .range([0, height])
-                    .padding(0.05);
-                
-                // Color scale
-                const colorScale = d3.scaleSequential()
-                    .interpolator(d3.interpolateRgb("#141414", "#ff006e"))
-                    .domain([0, 1]);
-                
-                // Draw cells
-                g.selectAll(".cell")
-                    .data(data)
-                    .enter()
-                    .append("rect")
-                    .attr("class", "cell")
-                    .attr("x", d => x(d.hour))
-                    .attr("y", d => y(d.zone_name))
-                    .attr("width", x.bandwidth())
-                    .attr("height", y.bandwidth())
-                    .attr("fill", d => colorScale(d.congestion))
-                    .attr("rx", 2)
-                    .style("opacity", 0)
-                    .on("mouseover", function(event, d) {{
-                        d3.select("#tooltip")
-                            .style("opacity", 1)
-                            .style("left", (event.pageX + 10) + "px")
-                            .style("top", (event.pageY - 10) + "px")
-                            .html(`<strong>${{d.zone_name}}</strong><br>
-                                  Heure: ${{d.hour}}h00<br>
-                                  Congestion: ${{(d.congestion * 100).toFixed(0)}}%`);
-                    }})
-                    .on("mouseout", function() {{
-                        d3.select("#tooltip").style("opacity", 0);
-                    }})
-                    .on("click", function(event, d) {{
-                        // Animation de pulsation
-                        d3.select(this)
-                            .transition()
-                            .duration(200)
-                            .attr("width", x.bandwidth() * 1.2)
-                            .attr("height", y.bandwidth() * 1.2)
-                            .attr("x", x(d.hour) - x.bandwidth() * 0.1)
-                            .attr("y", y(d.zone_name) - y.bandwidth() * 0.1)
-                            .transition()
-                            .duration(200)
-                            .attr("width", x.bandwidth())
-                            .attr("height", y.bandwidth())
-                            .attr("x", x(d.hour))
-                            .attr("y", y(d.zone_name));
-                    }});
-                
-                // Animate appearance
-                g.selectAll(".cell")
-                    .transition()
-                    .duration(1500)
-                    .delay((d, i) => i * 2)
-                    .style("opacity", 1);
-                
-                // Hour labels
-                g.selectAll(".hour-label")
-                    .data(hours)
-                    .enter()
-                    .append("text")
-                    .attr("class", "hour-label")
-                    .attr("x", d => x(d) + x.bandwidth() / 2)
-                    .attr("y", -5)
-                    .attr("text-anchor", "middle")
-                    .text(d => d + "h");
-                
-                // Zone labels
-                g.selectAll(".zone-label")
-                    .data(zones)
-                    .enter()
-                    .append("text")
-                    .attr("class", "zone-label")
-                    .attr("x", -5)
-                    .attr("y", d => y(d) + y.bandwidth() / 2)
-                    .attr("text-anchor", "end")
-                    .attr("alignment-baseline", "middle")
-                    .text(d => d);
-                
-                // Legend
-                const legendWidth = 200;
-                const legendHeight = 20;
-                
-                const legendScale = d3.scaleLinear()
-                    .domain([0, 100])
-                    .range([0, legendWidth]);
-                
-                const legendAxis = d3.axisBottom(legendScale)
-                    .ticks(5)
-                    .tickFormat(d => d + "%");
-                
-                const legend = g.append("g")
-                    .attr("transform", `translate(${{width - legendWidth}}, ${{height + 30}})`);
-                
-                // Gradient for legend
-                const legendGradient = svg.append("defs")
-                    .append("linearGradient")
-                    .attr("id", "legend-gradient")
-                    .attr("x1", "0%")
-                    .attr("x2", "100%");
-                
-                legendGradient.append("stop")
-                    .attr("offset", "0%")
-                    .attr("stop-color", "#141414");
-                
-                legendGradient.append("stop")
-                    .attr("offset", "100%")
-                    .attr("stop-color", "#ff006e");
-                
-                legend.append("rect")
-                    .attr("width", legendWidth)
-                    .attr("height", legendHeight)
-                    .attr("fill", "url(#legend-gradient)")
-                    .attr("rx", 3);
-                
-                legend.append("g")
-                    .attr("transform", `translate(0, ${{legendHeight}})`)
-                    .call(legendAxis)
-                    .selectAll("text")
-                    .style("fill", "#a8a8a8");
-            </script>
-        </body>
-        </html>
-        """
-        
-        st.components.v1.html(html_heatmap, height=600)
-        
-        # Predictions en temps réel
-        col1, col2, col3 = st.columns(3)
-        with col1:
-            zone_select = st.selectbox("Zone", top_zones)
-        with col2:
-            hour_select = st.slider("Heure", 0, 23, datetime.now().hour)
-        with col3:
-            if st.button("🔮 Prédire Congestion"):
-                # Prédiction
-                features = [[hour_select, datetime.now().weekday(), zone_select, 0, 0, 0,
-                           1 if hour_select in [7,8,9,17,18,19] else 0]]
-                prob = predictor.congestion_classifier.predict_proba(features)[0][1] if predictor.congestion_classifier else np.random.random()
-                
-                color = "#ff006e" if prob > 0.7 else "#00ff88" if prob < 0.3 else "#ff9500"
+            
+            # Afficher top 5 features
+            for idx, row in feature_importance.head(5).iterrows():
                 st.markdown(f"""
-                <div style="background: {color}20; border: 2px solid {color}; 
-                            border-radius: 12px; padding: 20px; text-align: center;">
-                    <h3 style="color: {color};">Probabilité de Congestion: {prob*100:.1f}%</h3>
-                    <p>Zone: {zones_coords.get(zone_select, {}).get('name', 'Unknown')}</p>
-                    <p>Recommandation: {'⚠️ Éviter' if prob > 0.7 else '✅ Route claire'}</p>
+                <div style="margin: 8px 0;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+                        <span style="font-size: 0.75rem; color: #a8a8a8;">{row['feature']}</span>
+                        <span style="font-size: 0.75rem; color: #00d4ff; font-weight: 600;">
+                            {row['importance']*100:.1f}%
+                        </span>
+                    </div>
+                    <div style="background: #2a2a2a; height: 6px; border-radius: 3px; overflow: hidden;">
+                        <div style="background: linear-gradient(90deg, #ff006e, #00d4ff); 
+                             width: {row['importance']*100}%; height: 100%;"></div>
+                    </div>
                 </div>
                 """, unsafe_allow_html=True)
+            
+            st.markdown("</div>", unsafe_allow_html=True)
     
-    with tab3:
+    with tab2:
         st.markdown("### Segmentation des Clients par Machine Learning")
         
         # Clustering
@@ -681,14 +475,6 @@ def create_ml_visualization(df, zones_coords):
                     r: 8;
                     filter: brightness(1.5) drop-shadow(0 0 10px currentColor);
                 }}
-                .axis {{
-                    stroke: #3a3a3a;
-                    stroke-width: 2;
-                }}
-                .axis-label {{
-                    fill: #a8a8a8;
-                    font-size: 12px;
-                }}
                 .legend-item {{
                     cursor: pointer;
                 }}
@@ -706,7 +492,6 @@ def create_ml_visualization(df, zones_coords):
                 
                 const width = 800;
                 const height = 600;
-                const depth = 400;
                 
                 const svg = d3.select("#scatter3d")
                     .append("svg")
@@ -722,10 +507,10 @@ def create_ml_visualization(df, zones_coords):
                     .attr("x", width / 2)
                     .attr("y", 30)
                     .attr("text-anchor", "middle")
-                    .text("👥 Segmentation 3D des Clients - KMeans Clustering");
+                    .text("👥 Segmentation 3D des Clients - KMeans (k=3)");
                 
-                const colors = ["#ff006e", "#00d4ff", "#00ff88", "#ff9500", "#8b5cf6"];
-                const clusterNames = ["Économique", "Business", "Touriste", "Longue Distance", "Premium"];
+                const colors = ["#ff006e", "#00d4ff", "#00ff88"];
+                const clusterNames = ["Économique", "Standard", "Premium"];
                 
                 // 3D projection
                 let alpha = 0;
@@ -839,191 +624,11 @@ def create_ml_visualization(df, zones_coords):
             st.markdown("#### Caractéristiques des Segments")
             st.markdown("""
             <div class="guide-box">
-                <p><strong>🔴 Économique:</strong> Courts trajets, faibles tips</p>
-                <p><strong>🔵 Business:</strong> Heures de pointe, tips élevés</p>
-                <p><strong>🟢 Touriste:</strong> Zones touristiques, groupes</p>
-                <p><strong>🟠 Longue Distance:</strong> Aéroports, > 10 miles</p>
-                <p><strong>🟣 Premium:</strong> Tarifs élevés, service VIP</p>
+                <p><strong>🔴 Économique:</strong> Courts trajets, faibles tarifs, vitesse modérée</p>
+                <p><strong>🔵 Standard:</strong> Trajets moyens, tips standards, extras occasionnels</p>
+                <p><strong>🟢 Premium:</strong> Longues distances, tips élevés, vitesse rapide, extras fréquents</p>
             </div>
             """, unsafe_allow_html=True)
-    
-    with tab4:
-        st.markdown("### Optimisation du Revenue par Zone et Heure")
-        
-        # Interface de sélection
-        col1, col2, col3 = st.columns(3)
-        with col1:
-            selected_zone = st.selectbox("Zone de départ", list(zones_coords.keys())[:20])
-        with col2:
-            target_hour = st.slider("Heure cible", 0, 23, 12)
-        with col3:
-            target_day = st.selectbox("Jour", ["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"])
-        
-        if st.button("🚀 Optimiser Revenue", use_container_width=True):
-            # Générer des prédictions pour les zones voisines
-            predictions = []
-            for zone in list(zones_coords.keys())[:30]:
-                revenue, confidence = predictor.predict_optimal_route_revenue(
-                    zone, target_hour, ["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"].index(target_day)
-                )
-                predictions.append({
-                    'zone': zone,
-                    'name': zones_coords[zone]['name'][:20],
-                    'revenue': revenue,
-                    'confidence': confidence,
-                    'lat': zones_coords[zone]['lat'],
-                    'lon': zones_coords[zone]['lon']
-                })
-            
-            # Top 10 zones
-            top_predictions = sorted(predictions, key=lambda x: x['revenue'], reverse=True)[:10]
-            
-            # Visualisation Sunburst D3.js
-            sunburst_data = {
-                'name': 'Revenue',
-                'children': [
-                    {
-                        'name': pred['name'],
-                        'value': pred['revenue'],
-                        'confidence': pred['confidence']
-                    } for pred in top_predictions
-                ]
-            }
-            
-            html_sunburst = f"""
-            <!DOCTYPE html>
-            <html>
-            <head>
-                <script src="https://d3js.org/d3.v7.min.js"></script>
-                <style>
-                    body {{ 
-                        font-family: 'Inter', sans-serif; 
-                        background: #141414;
-                        margin: 0;
-                        padding: 20px;
-                    }}
-                    .arc {{
-                        cursor: pointer;
-                        transition: all 0.3s ease;
-                    }}
-                    .arc:hover {{
-                        filter: brightness(1.3);
-                    }}
-                    .center-text {{
-                        font-size: 24px;
-                        font-weight: 700;
-                        fill: #ff006e;
-                    }}
-                    .value-text {{
-                        font-size: 18px;
-                        fill: #00ff88;
-                    }}
-                </style>
-            </head>
-            <body>
-                <div id="sunburst"></div>
-                <script>
-                    const data = {json.dumps(sunburst_data)};
-                    
-                    const width = 600;
-                    const height = 600;
-                    const radius = Math.min(width, height) / 2;
-                    
-                    const svg = d3.select("#sunburst")
-                        .append("svg")
-                        .attr("width", width)
-                        .attr("height", height);
-                    
-                    const g = svg.append("g")
-                        .attr("transform", `translate(${{width/2}},${{height/2}})`);
-                    
-                    // Color scale
-                    const color = d3.scaleSequential()
-                        .domain([0, 50])
-                        .interpolator(d3.interpolateRgb("#ff006e", "#00ff88"));
-                    
-                    // Partition layout
-                    const partition = d3.partition()
-                        .size([2 * Math.PI, radius]);
-                    
-                    const root = d3.hierarchy(data)
-                        .sum(d => d.value)
-                        .sort((a, b) => b.value - a.value);
-                    
-                    partition(root);
-                    
-                    const arc = d3.arc()
-                        .startAngle(d => d.x0)
-                        .endAngle(d => d.x1)
-                        .innerRadius(d => d.y0)
-                        .outerRadius(d => d.y1);
-                    
-                    // Draw arcs
-                    const paths = g.selectAll(".arc")
-                        .data(root.descendants())
-                        .enter()
-                        .append("path")
-                        .attr("class", "arc")
-                        .attr("d", arc)
-                        .style("fill", d => color(d.data.value || 0))
-                        .style("stroke", "#141414")
-                        .style("stroke-width", 2)
-                        .style("opacity", 0)
-                        .on("mouseover", function(event, d) {{
-                            d3.select(this)
-                                .style("filter", "brightness(1.5) drop-shadow(0 0 20px rgba(0,255,136,0.6))");
-                            
-                            // Update center text
-                            centerText.text(d.data.name || "");
-                            valueText.text(d.data.value ? `$${{d.data.value.toFixed(2)}}` : "");
-                        }})
-                        .on("mouseout", function() {{
-                            d3.select(this).style("filter", "brightness(1)");
-                            centerText.text("Revenue");
-                            valueText.text("Optimal");
-                        }});
-                    
-                    // Animate appearance
-                    paths.transition()
-                        .duration(1500)
-                        .delay((d, i) => i * 100)
-                        .style("opacity", 0.8)
-                        .attrTween("d", function(d) {{
-                            const interpolate = d3.interpolate({{x0: 0, x1: 0, y0: 0, y1: 0}}, d);
-                            return function(t) {{
-                                return arc(interpolate(t));
-                            }};
-                        }});
-                    
-                    // Center text
-                    const centerText = g.append("text")
-                        .attr("class", "center-text")
-                        .attr("text-anchor", "middle")
-                        .attr("y", -10)
-                        .text("Revenue");
-                    
-                    const valueText = g.append("text")
-                        .attr("class", "value-text")
-                        .attr("text-anchor", "middle")
-                        .attr("y", 20)
-                        .text("Optimal");
-                </script>
-            </body>
-            </html>
-            """
-            
-            st.components.v1.html(html_sunburst, height=650)
-            
-            # Table des recommandations
-            st.markdown("#### 🏆 Top Zones Recommandées")
-            recommendations_df = pd.DataFrame(top_predictions)
-            recommendations_df['revenue'] = recommendations_df['revenue'].apply(lambda x: f"${x:.2f}")
-            recommendations_df['confidence'] = recommendations_df['confidence'].apply(lambda x: f"{x*100:.0f}%")
-            st.dataframe(
-                recommendations_df[['name', 'revenue', 'confidence']],
-                use_container_width=True,
-                hide_index=True
-            )
 
 # Export de la fonction pour intégration
 __all__ = ['create_ml_visualization', 'TaxiMLPredictor']
