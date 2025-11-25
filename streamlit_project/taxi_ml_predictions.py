@@ -8,7 +8,22 @@ from sklearn.ensemble import RandomForestRegressor
 from sklearn.cluster import KMeans
 from sklearn.decomposition import PCA
 import json
+import os
+import joblib
+import hashlib
 from math import radians, cos, sin, asin, sqrt
+
+# ============= CHEMINS DES MODÈLES SAUVEGARDÉS =============
+MODEL_DIR = "models"
+TIP_MODEL_PATH = os.path.join(MODEL_DIR, "tip_predictor.joblib")
+CLUSTER_MODEL_PATH = os.path.join(MODEL_DIR, "cluster_model.joblib")
+FEATURE_IMPORTANCE_PATH = os.path.join(MODEL_DIR, "feature_importance.joblib")
+MODEL_SCORE_PATH = os.path.join(MODEL_DIR, "model_score.joblib")
+
+# Créer le dossier models s'il n'existe pas
+if not os.path.exists(MODEL_DIR):
+    os.makedirs(MODEL_DIR)
+
 
 class TaxiMLPredictor:
     """
@@ -47,16 +62,13 @@ class TaxiMLPredictor:
     
     def calculate_distance(self, lat1, lon1, lat2, lon2):
         """Calcule la distance en miles entre deux points GPS (formule de Haversine)"""
-        # Convertir en radians
         lon1, lat1, lon2, lat2 = map(radians, [lon1, lat1, lon2, lat2])
         
-        # Formule de Haversine
         dlon = lon2 - lon1
         dlat = lat2 - lat1
         a = sin(dlat/2)**2 + cos(lat1) * cos(lat2) * sin(dlon/2)**2
         c = 2 * asin(sqrt(a))
         
-        # Rayon de la Terre en miles
         miles = 3959 * c
         return miles
     
@@ -84,7 +96,8 @@ class TaxiMLPredictor:
             n_estimators=100,
             max_depth=15,
             min_samples_split=10,
-            random_state=42
+            random_state=42,
+            n_jobs=-1  # Utiliser tous les CPU disponibles
         )
         self.tip_predictor.fit(X_train, y_train)
         
@@ -111,17 +124,28 @@ class TaxiMLPredictor:
         prediction = self.tip_predictor.predict(features)[0]
         return max(0, prediction)
     
-    def customer_segmentation(self, df):
-        """Segmentation des clients"""
+    def train_customer_segmentation(self, df):
+        """Entraîne le modèle de segmentation des clients"""
         features_cluster = ['trip_distance', 'fare_amount', 'tip_amount', 
                            'extra', 'avg_speed']
         
         X = df[features_cluster].fillna(0)
         X_scaled = self.scaler.fit_transform(X)
         
-        # KMeans clustering avec k=3
-        self.customer_clusterer = KMeans(n_clusters=3, random_state=42)
-        clusters = self.customer_clusterer.fit_predict(X_scaled)
+        self.customer_clusterer = KMeans(n_clusters=3, random_state=42, n_init=10)
+        self.customer_clusterer.fit(X_scaled)
+        
+        return self.scaler
+    
+    def predict_clusters(self, df):
+        """Prédit les clusters pour de nouvelles données"""
+        features_cluster = ['trip_distance', 'fare_amount', 'tip_amount', 
+                           'extra', 'avg_speed']
+        
+        X = df[features_cluster].fillna(0)
+        X_scaled = self.scaler.transform(X)
+        
+        clusters = self.customer_clusterer.predict(X_scaled)
         
         # PCA pour visualisation
         pca = PCA(n_components=3)
@@ -136,49 +160,156 @@ class TaxiMLPredictor:
         return X_pca, clusters, cluster_names
 
 
+# ============= FONCTIONS DE CACHE ET PERSISTANCE =============
+
+def get_data_hash(df):
+    """Génère un hash unique basé sur les données pour détecter les changements"""
+    # Utiliser la forme et quelques statistiques pour créer un hash rapide
+    data_signature = f"{df.shape}_{df['total_amount'].sum():.2f}_{df['trip_distance'].mean():.4f}"
+    return hashlib.md5(data_signature.encode()).hexdigest()[:16]
+
+
+def models_exist():
+    """Vérifie si les modèles sauvegardés existent"""
+    return (os.path.exists(TIP_MODEL_PATH) and 
+            os.path.exists(FEATURE_IMPORTANCE_PATH) and
+            os.path.exists(MODEL_SCORE_PATH))
+
+
+def save_models(predictor, score, feature_importance):
+    """Sauvegarde les modèles sur disque"""
+    joblib.dump(predictor, TIP_MODEL_PATH)
+    joblib.dump(score, MODEL_SCORE_PATH)
+    joblib.dump(feature_importance, FEATURE_IMPORTANCE_PATH)
+
+
+def load_models():
+    """Charge les modèles depuis le disque"""
+    predictor = joblib.load(TIP_MODEL_PATH)
+    score = joblib.load(MODEL_SCORE_PATH)
+    feature_importance = joblib.load(FEATURE_IMPORTANCE_PATH)
+    return predictor, score, feature_importance
+
+
+@st.cache_resource(show_spinner="🔄 Chargement du modèle ML...")
+def get_trained_predictor(_df, data_hash):
+    """
+    Récupère ou entraîne le modèle de prédiction.
+    Utilise le cache Streamlit + persistance sur disque.
+    
+    Le underscore devant _df indique à Streamlit de ne pas hasher ce paramètre.
+    """
+    # Vérifier si les modèles existent sur disque
+    if models_exist():
+        try:
+            predictor, score, feature_importance = load_models()
+            # Vérifier que le modèle est valide
+            if predictor.tip_predictor is not None:
+                return predictor, score, feature_importance
+        except Exception as e:
+            st.warning(f"Erreur lors du chargement du modèle: {e}. Ré-entraînement...")
+    
+    # Entraîner un nouveau modèle
+    predictor = TaxiMLPredictor()
+    df_ml = predictor.prepare_features(_df)
+    score, feature_importance = predictor.train_tip_predictor(df_ml)
+    
+    # Entraîner aussi le modèle de clustering
+    predictor.train_customer_segmentation(df_ml)
+    
+    # Sauvegarder sur disque
+    save_models(predictor, score, feature_importance)
+    
+    return predictor, score, feature_importance
+
+
+@st.cache_data(show_spinner="📊 Préparation des données...")
+def get_prepared_features(_df, data_hash):
+    """
+    Prépare les features des données (avec cache).
+    """
+    predictor = TaxiMLPredictor()
+    return predictor.prepare_features(_df)
+
+
+@st.cache_data(show_spinner=" Calcul de la segmentation...")
+def get_clustering_visualization(_df_ml, sample_size=500):
+    """
+    Calcule la visualisation du clustering (avec cache).
+    Réduit le nombre de points pour améliorer les performances.
+    """
+    # Échantillonner les données
+    df_sample = _df_ml.sample(min(sample_size, len(_df_ml)), random_state=42)
+    
+    features_cluster = ['trip_distance', 'fare_amount', 'tip_amount', 'extra', 'avg_speed']
+    X = df_sample[features_cluster].fillna(0)
+    
+    scaler = StandardScaler()
+    X_scaled = scaler.fit_transform(X)
+    
+    # KMeans
+    kmeans = KMeans(n_clusters=3, random_state=42, n_init=10)
+    clusters = kmeans.fit_predict(X_scaled)
+    
+    # PCA
+    pca = PCA(n_components=3)
+    X_pca = pca.fit_transform(X_scaled)
+    
+    cluster_names = {
+        0: "Économique",
+        1: "Standard", 
+        2: "Premium"
+    }
+    
+    return X_pca, clusters, cluster_names
+
+
+# ============= FONCTION PRINCIPALE DE VISUALISATION =============
+
 def create_ml_visualization(df, zones_coords):
-    """Crée la section ML avec visualisations D3.js"""
+    """Crée la section ML avec visualisations D3.js - VERSION OPTIMISÉE"""
     
     st.markdown("""
     <div class="chart-header">
-        <h2 class="chart-title">🤖 Intelligence Artificielle & Prédictions</h2>
+        <h2 class="chart-title"> Intelligence Artificielle & Prédictions</h2>
         <span class="chart-badge">MACHINE LEARNING</span>
     </div>
     """, unsafe_allow_html=True)
     
-    # Initialiser le prédicteur
-    predictor = TaxiMLPredictor()
+    # ============= CHARGEMENT OPTIMISÉ DES MODÈLES =============
+    # Calculer le hash des données pour détecter les changements
+    data_hash = get_data_hash(df)
     
-    # Préparer les données
-    df_ml = predictor.prepare_features(df)
+    # Charger ou entraîner le modèle (CACHÉ!)
+    predictor, score, feature_importance = get_trained_predictor(df, data_hash)
     
-    # Entraîner le modèle
-    score, feature_importance = predictor.train_tip_predictor(df_ml)
+    # Préparer les features (CACHÉ!)
+    df_ml = get_prepared_features(df, data_hash)
     
-    # Tabs pour différentes analyses
+    # Indicateur de statut du modèle
+    model_status = "✅ Modèle chargé depuis le cache" if models_exist() else "🆕 Nouveau modèle entraîné"
+    
     tab1, tab2 = st.tabs([
-        "🎯 Prédiction de Pourboire",
-        "👥 Segmentation Clients"
+        " Prédiction de Pourboire",
+        " Segmentation Clients"
     ])
     
     with tab1:
-        st.markdown("### 🔮 Prédicteur de Pourboire avec Random Forest")
+        st.markdown("####  Prédicteur de Pourboire")
         
-        col1, col2 = st.columns([2, 1])
+        col1, col2 = st.columns([3, 1])
         
         with col1:
             st.markdown(f"""
-            <div style="background: var(--bg-tertiary); border: 1px solid var(--border-color); 
-                 border-radius: 12px; padding: 1rem; margin-bottom: 1.5rem;">
-                <p style="color: var(--text-secondary); margin: 0;">
-                    <strong style="color: var(--accent-green);">Modèle entraîné</strong> • 
-                    Score R²: <strong style="color: var(--accent-blue);">{score:.2%}</strong> • 
-                    Random Forest avec 100 arbres
+            <div style="background: #1a1a1a; border: 1px solid #252525; 
+                 border-radius: 8px; padding: 0.6rem 0.85rem; margin-bottom: 1rem;">
+                <p style="color: #a8a8a8; margin: 0; font-size: 0.75rem;">
+                    <strong style="color: #00ff88;">{model_status}</strong> • 
+                    Score R²: <strong style="color: #00d4ff;">{score:.2%}</strong> • 
+                    Random Forest (100 arbres)
                 </p>
             </div>
             """, unsafe_allow_html=True)
-            
-            st.markdown("#### 🗺️ Itinéraire du Trajet")
             
             # Zones populaires avec coordonnées
             popular_zones = {
@@ -215,7 +346,6 @@ def create_ml_visualization(df, zones_coords):
                     help="Sélectionnez la zone de dropoff"
                 )
             
-            # Calculer automatiquement la distance
             pu_data = popular_zones[pu_zone_name]
             do_data = popular_zones[do_zone_name]
             
@@ -224,86 +354,54 @@ def create_ml_visualization(df, zones_coords):
                 do_data['lat'], do_data['lon']
             )
             
-            # Afficher la distance calculée
             st.markdown(f"""
-            <div style="background: linear-gradient(135deg, #8b5cf615, #8b5cf605); 
-                 border: 1px solid #8b5cf6; border-radius: 12px; padding: 1rem; margin: 1rem 0;">
+            <div style="background: linear-gradient(135deg, #8b5cf610, #8b5cf605); 
+                 border: 1px solid #8b5cf6; border-radius: 8px; padding: 0.6rem; margin: 0.6rem 0;">
                 <div style="display: flex; justify-content: space-between; align-items: center;">
-                    <span style="color: #a8a8a8;">📏 Distance calculée:</span>
-                    <span style="color: #8b5cf6; font-size: 1.5rem; font-weight: 700;">
+                    <span style="color: #a8a8a8; font-size: 0.75rem;">📍 Distance calculée:</span>
+                    <span style="color: #8b5cf6; font-size: 1.1rem; font-weight: 700;">
                         {calculated_distance:.2f} miles
                     </span>
                 </div>
             </div>
             """, unsafe_allow_html=True)
             
-            st.markdown("#### ⚙️ Paramètres de la Course")
-            
             col_param1, col_param2 = st.columns(2)
             
             with col_param1:
-                pickup_hour = st.slider(
-                    "🕐 Heure de pickup", 
-                    0, 23, 12,
-                    help="Heure de prise en charge (0-23h)"
-                )
-                
-                day_names = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche']
-                pickup_day = st.selectbox(
-                    "📅 Jour de la semaine", 
-                    range(7), 
-                    format_func=lambda x: day_names[x],
-                    help="Jour de la semaine"
-                )
+                pickup_hour = st.slider(" Heure", 0, 23, 12)
+                day_names = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim']
+                pickup_day = st.selectbox(" Jour", range(7), format_func=lambda x: day_names[x])
             
             with col_param2:
-                passenger_count = st.slider(
-                    "👥 Nombre de passagers", 
-                    1, 6, 1,
-                    help="Nombre de passagers dans le taxi"
-                )
-                
-                payment_type = st.selectbox(
-                    "💳 Type de paiement", 
-                    [1, 2], 
-                    format_func=lambda x: "Carte bancaire" if x == 1 else "Espèces",
-                    help="Mode de paiement"
-                )
+                passenger_count = st.slider(" Passagers", 1, 6, 1)
+                payment_type = st.selectbox(" Paiement", [1, 2], format_func=lambda x: "Carte" if x == 1 else "Cash")
             
-            # Calculer la vitesse moyenne estimée (basée sur l'heure et la distance)
             is_rush = pickup_hour in [7, 8, 9, 17, 18, 19]
             if is_rush:
-                avg_speed = max(10, 20 - (calculated_distance * 0.5))  # Plus lent en rush hour
+                avg_speed = max(10, 20 - (calculated_distance * 0.5))
             else:
-                avg_speed = min(35, 25 + (calculated_distance * 0.3))  # Plus rapide hors rush
+                avg_speed = min(35, 25 + (calculated_distance * 0.3))
             
-            # Calculer le tarif estimé
             estimated_fare = predictor.estimate_fare(calculated_distance, is_rush)
             
             st.markdown(f"""
-            <div style="background: var(--bg-tertiary); border: 1px solid var(--border-color); 
-                 border-radius: 12px; padding: 1rem; margin: 1rem 0;">
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+            <div style="background: #1a1a1a; border: 1px solid #252525; 
+                 border-radius: 8px; padding: 0.6rem; margin: 0.6rem 0;">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
                     <div>
-                        <span style="color: #a8a8a8; font-size: 0.875rem;">💵 Tarif estimé:</span>
-                        <div style="color: #00d4ff; font-size: 1.25rem; font-weight: 700;">
-                            ${estimated_fare:.2f}
-                        </div>
+                        <span style="color: #a8a8a8; font-size: 0.7rem;"> Tarif estimé:</span>
+                        <div style="color: #00d4ff; font-size: 1rem; font-weight: 700;">${estimated_fare:.2f}</div>
                     </div>
                     <div>
-                        <span style="color: #a8a8a8; font-size: 0.875rem;">⚡ Vitesse estimée:</span>
-                        <div style="color: #00ff88; font-size: 1.25rem; font-weight: 700;">
-                            {avg_speed:.0f} mph
-                        </div>
+                        <span style="color: #a8a8a8; font-size: 0.7rem;">⚡ Vitesse estimée:</span>
+                        <div style="color: #00ff88; font-size: 1rem; font-weight: 700;">{avg_speed:.0f} mph</div>
                     </div>
                 </div>
             </div>
             """, unsafe_allow_html=True)
             
-            st.markdown("<br>", unsafe_allow_html=True)
-            
-            if st.button("🎯 PRÉDIRE LE POURBOIRE", use_container_width=True, type="primary"):
-                # Faire la prédiction
+            if st.button(" PRÉDIRE LE POURBOIRE", use_container_width=True, type="primary"):
                 predicted_tip = predictor.predict_tip(
                     calculated_distance, estimated_fare, pickup_hour, pickup_day,
                     passenger_count, payment_type, pu_data['id'], do_data['id'], avg_speed
@@ -312,137 +410,98 @@ def create_ml_visualization(df, zones_coords):
                 tip_percentage = (predicted_tip / estimated_fare * 100) if estimated_fare > 0 else 0
                 total_amount = estimated_fare + predicted_tip
                 
-                st.markdown("<br>", unsafe_allow_html=True)
-                st.markdown("### 📊 Résultats de la Prédiction")
-                
                 col_res1, col_res2, col_res3 = st.columns(3)
                 
                 with col_res1:
                     st.markdown(f"""
-                    <div style="background: linear-gradient(135deg, #ff006e15, #ff006e05); 
-                         border: 2px solid #ff006e; border-radius: 16px; padding: 2rem; text-align: center;">
-                        <div style="font-size: 3rem; margin-bottom: 0.5rem;">💵</div>
-                        <div style="font-size: 2.5rem; font-weight: 700; color: #ff006e; margin-bottom: 0.5rem;">
-                            ${predicted_tip:.2f}
-                        </div>
-                        <div style="font-size: 0.875rem; color: #a8a8a8; text-transform: uppercase; letter-spacing: 0.05em;">
-                            Pourboire Prédit
-                        </div>
+                    <div style="background: linear-gradient(135deg, #ff006e10, #ff006e05); 
+                         border: 1px solid #ff006e; border-radius: 10px; padding: 1rem; text-align: center;">
+                        <div style="font-size: 1.5rem; margin-bottom: 0.25rem;"></div>
+                        <div style="font-size: 1.5rem; font-weight: 700; color: #ff006e;">${predicted_tip:.2f}</div>
+                        <div style="font-size: 0.65rem; color: #a8a8a8; text-transform: uppercase;">Pourboire Prédit</div>
                     </div>
                     """, unsafe_allow_html=True)
                 
                 with col_res2:
                     st.markdown(f"""
-                    <div style="background: linear-gradient(135deg, #00d4ff15, #00d4ff05); 
-                         border: 2px solid #00d4ff; border-radius: 16px; padding: 2rem; text-align: center;">
-                        <div style="font-size: 3rem; margin-bottom: 0.5rem;">📊</div>
-                        <div style="font-size: 2.5rem; font-weight: 700; color: #00d4ff; margin-bottom: 0.5rem;">
-                            {tip_percentage:.1f}%
-                        </div>
-                        <div style="font-size: 0.875rem; color: #a8a8a8; text-transform: uppercase; letter-spacing: 0.05em;">
-                            Pourcentage
-                        </div>
+                    <div style="background: linear-gradient(135deg, #00d4ff10, #00d4ff05); 
+                         border: 1px solid #00d4ff; border-radius: 10px; padding: 1rem; text-align: center;">
+                        <div style="font-size: 1.5rem; margin-bottom: 0.25rem;"></div>
+                        <div style="font-size: 1.5rem; font-weight: 700; color: #00d4ff;">{tip_percentage:.1f}%</div>
+                        <div style="font-size: 0.65rem; color: #a8a8a8; text-transform: uppercase;">Pourcentage</div>
                     </div>
                     """, unsafe_allow_html=True)
                 
                 with col_res3:
                     st.markdown(f"""
-                    <div style="background: linear-gradient(135deg, #00ff8815, #00ff8805); 
-                         border: 2px solid #00ff88; border-radius: 16px; padding: 2rem; text-align: center;">
-                        <div style="font-size: 3rem; margin-bottom: 0.5rem;">💰</div>
-                        <div style="font-size: 2.5rem; font-weight: 700; color: #00ff88; margin-bottom: 0.5rem;">
-                            ${total_amount:.2f}
-                        </div>
-                        <div style="font-size: 0.875rem; color: #a8a8a8; text-transform: uppercase; letter-spacing: 0.05em;">
-                            Total Course
-                        </div>
+                    <div style="background: linear-gradient(135deg, #00ff8810, #00ff8805); 
+                         border: 1px solid #00ff88; border-radius: 10px; padding: 1rem; text-align: center;">
+                        <div style="font-size: 1.5rem; margin-bottom: 0.25rem;"></div>
+                        <div style="font-size: 1.5rem; font-weight: 700; color: #00ff88;">${total_amount:.2f}</div>
+                        <div style="font-size: 0.65rem; color: #a8a8a8; text-transform: uppercase;">Total Course</div>
                     </div>
                     """, unsafe_allow_html=True)
                 
-                # Comparaison avec la moyenne
                 avg_tip = df_ml['tip_amount'].mean()
                 comparison = "supérieur" if predicted_tip > avg_tip else "inférieur"
                 diff_pct = abs((predicted_tip - avg_tip) / avg_tip * 100)
-                
                 is_weekend = pickup_day in [5, 6]
                 
                 st.markdown(f"""
-                <div style="background: var(--bg-tertiary); border: 1px solid var(--border-color); 
-                     border-radius: 12px; padding: 1.5rem; margin-top: 1.5rem; border-left: 4px solid #8b5cf6;">
-                    <h4 style="color: #8b5cf6; margin-top: 0;">📈 Analyse Détaillée</h4>
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; color: var(--text-secondary); line-height: 1.8;">
+                <div style="background: #1a1a1a; border: 1px solid #252525; 
+                     border-radius: 8px; padding: 0.85rem; margin-top: 0.85rem; border-left: 3px solid #8b5cf6;">
+                    <h4 style="color: #8b5cf6; margin: 0 0 0.5rem 0; font-size: 0.8rem;"> Analyse</h4>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; color: #a8a8a8; font-size: 0.75rem; line-height: 1.5;">
                         <div>
-                            <p><strong style="color: #fff;">Trajet:</strong></p>
-                            <p>🟢 {pu_zone_name}</p>
-                            <p>🔴 {do_zone_name}</p>
-                            <p>📏 {calculated_distance:.2f} miles</p>
+                            <p style="margin: 0;"><strong style="color: #fff;">Trajet:</strong> {pu_zone_name[:12]} → {do_zone_name[:12]}</p>
+                            <p style="margin: 0;"> {calculated_distance:.2f} miles</p>
                         </div>
                         <div>
-                            <p><strong style="color: #fff;">Contexte:</strong></p>
-                            <p>{'🔥 Rush hour' if is_rush else '✨ Heure normale'}</p>
-                            <p>{'🎉 Weekend' if is_weekend else '💼 Semaine'}</p>
-                            <p>{'💳 Carte' if payment_type == 1 else '💵 Cash'}</p>
+                            <p style="margin: 0;">{' Rush hour' if is_rush else ' Heure normale'} • {' Weekend' if is_weekend else ' Semaine'}</p>
+                            <p style="margin: 0;">{' Carte' if payment_type == 1 else ' Cash'}</p>
                         </div>
                     </div>
-                    <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid #2a2a2a;">
-                        <p>Le pourboire prédit est <strong style="color: {'#00ff88' if predicted_tip > avg_tip else '#ff006e'};">
-                        {comparison}</strong> à la moyenne de <strong>${avg_tip:.2f}</strong> 
-                        (différence: <strong style="color: #00d4ff;">{diff_pct:.1f}%</strong>)</p>
+                    <div style="margin-top: 0.5rem; padding-top: 0.5rem; border-top: 1px solid #252525; font-size: 0.75rem;">
+                        <p style="margin: 0;">Pourboire <strong style="color: {'#00ff88' if predicted_tip > avg_tip else '#ff006e'};">{comparison}</strong> à la moyenne (${avg_tip:.2f}) — diff: <strong style="color: #00d4ff;">{diff_pct:.1f}%</strong></p>
                     </div>
                 </div>
                 """, unsafe_allow_html=True)
         
         with col2:
-            st.markdown("""
+            st.markdown(f"""
             <div class="guide-box">
-                <h4>💡 Guide d'Utilisation</h4>
-                <p><strong>1. Sélection Itinéraire:</strong></p>
-                <p>• Choisissez départ et arrivée</p>
-                <p>• Distance calculée automatiquement</p>
-                <p>• Tarif estimé selon le trajet</p>
-                
-                <p><strong>2. Facteurs Temporels:</strong></p>
+                <h4> Guide</h4>
+                <p><strong>Itinéraire:</strong></p>
+                <p>• Choisir départ/arrivée</p>
+                <p>• Distance auto-calculée</p>
+                <p style="margin-top: 0.4rem;"><strong>Facteurs:</strong></p>
                 <p>• Rush hours (7-9h, 17-19h)</p>
-                <p>• Weekend vs Semaine</p>
-                <p>• Impact sur vitesse et tarif</p>
-                
-                <p><strong>3. Autres Paramètres:</strong></p>
-                <p>• Type de paiement (carte = + tips)</p>
-                <p>• Nombre de passagers</p>
-                <p>• Zones premium (aéroports)</p>
-                
-                <p style="margin-top: 20px;"><strong>🎯 Précision:</strong></p>
-                <p>Score R² du modèle: <strong style="color: #00ff88;">{:.1%}</strong></p>
-                
-                <p style="margin-top: 20px;"><strong>🔝 Top Variables:</strong></p>
-            """.format(score), unsafe_allow_html=True)
+                <p>• Carte = + tips</p>
+                <p style="margin-top: 0.4rem;"><strong> Score R²:</strong></p>
+                <p style="color: #00ff88; font-weight: 600;">{score:.1%}</p>
+                <p style="margin-top: 0.4rem;"><strong> Top Variables:</strong></p>
+            </div>
+            """, unsafe_allow_html=True)
             
-            # Afficher top 5 features
-            for idx, row in feature_importance.head(5).iterrows():
+            for idx, row in feature_importance.head(4).iterrows():
                 st.markdown(f"""
-                <div style="margin: 8px 0;">
-                    <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
-                        <span style="font-size: 0.75rem; color: #a8a8a8;">{row['feature']}</span>
-                        <span style="font-size: 0.75rem; color: #00d4ff; font-weight: 600;">
-                            {row['importance']*100:.1f}%
-                        </span>
+                <div style="margin: 4px 0;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 2px;">
+                        <span style="font-size: 0.65rem; color: #a8a8a8;">{row['feature'][:12]}</span>
+                        <span style="font-size: 0.65rem; color: #00d4ff; font-weight: 600;">{row['importance']*100:.1f}%</span>
                     </div>
-                    <div style="background: #2a2a2a; height: 6px; border-radius: 3px; overflow: hidden;">
-                        <div style="background: linear-gradient(90deg, #ff006e, #00d4ff); 
-                             width: {row['importance']*100}%; height: 100%;"></div>
+                    <div style="background: #252525; height: 4px; border-radius: 2px; overflow: hidden;">
+                        <div style="background: linear-gradient(90deg, #ff006e, #00d4ff); width: {row['importance']*100}%; height: 100%;"></div>
                     </div>
                 </div>
                 """, unsafe_allow_html=True)
-            
-            st.markdown("</div>", unsafe_allow_html=True)
     
     with tab2:
-        st.markdown("### Segmentation des Clients par Machine Learning")
+        st.markdown("####  Segmentation des Clients par ML")
         
-        # Clustering
-        X_pca, clusters, cluster_names = predictor.customer_segmentation(df_ml.sample(min(1000, len(df_ml))))
+        # Clustering avec CACHE - ne recalcule que si nécessaire
+        X_pca, clusters, cluster_names = get_clustering_visualization(df_ml, sample_size=500)
         
-        # Préparer les données pour visualisation 3D
         scatter_data = []
         for i in range(len(X_pca)):
             scatter_data.append({
@@ -453,7 +512,6 @@ def create_ml_visualization(df, zones_coords):
                 'name': cluster_names[clusters[i]]
             })
         
-        # Visualisation D3.js 3D
         html_3d = f"""
         <!DOCTYPE html>
         <html>
@@ -465,22 +523,22 @@ def create_ml_visualization(df, zones_coords):
                     font-family: 'Inter', sans-serif; 
                     background: #141414;
                     margin: 0;
-                    padding: 20px;
+                    padding: 12px;
                 }}
                 .point {{
                     cursor: pointer;
-                    transition: all 0.3s ease;
+                    transition: all 0.25s ease;
                 }}
                 .point:hover {{
-                    r: 8;
-                    filter: brightness(1.5) drop-shadow(0 0 10px currentColor);
+                    r: 6;
+                    filter: brightness(1.4) drop-shadow(0 0 8px currentColor);
                 }}
                 .legend-item {{
                     cursor: pointer;
                 }}
                 .title {{
                     fill: #00ff88;
-                    font-size: 16px;
+                    font-size: 13px;
                     font-weight: 700;
                 }}
             </style>
@@ -490,8 +548,8 @@ def create_ml_visualization(df, zones_coords):
             <script>
                 const data = {json.dumps(scatter_data)};
                 
-                const width = 800;
-                const height = 600;
+                const width = 700;
+                const height = 420;
                 
                 const svg = d3.select("#scatter3d")
                     .append("svg")
@@ -499,35 +557,32 @@ def create_ml_visualization(df, zones_coords):
                     .attr("height", height);
                 
                 const g = svg.append("g")
-                    .attr("transform", "translate(400,300)");
+                    .attr("transform", "translate(350,210)");
                 
-                // Title
                 svg.append("text")
                     .attr("class", "title")
                     .attr("x", width / 2)
-                    .attr("y", 30)
+                    .attr("y", 22)
                     .attr("text-anchor", "middle")
-                    .text("👥 Segmentation 3D des Clients - KMeans (k=3)");
+                    .text(" Segmentation 3D - {len(scatter_data)} points");
                 
                 const colors = ["#ff006e", "#00d4ff", "#00ff88"];
                 const clusterNames = ["Économique", "Standard", "Premium"];
                 
-                // 3D projection
                 let alpha = 0;
                 let beta = 0;
                 let startAngle = Math.PI/4;
                 
                 const point3d = d3._3d()
-                    .x(d => d.x * 100)
-                    .y(d => d.y * 100)
-                    .z(d => d.z * 100)
+                    .x(d => d.x * 80)
+                    .y(d => d.y * 80)
+                    .z(d => d.z * 80)
                     .origin([0, 0])
                     .rotateY(startAngle)
                     .rotateX(-startAngle);
                 
                 const points3d = point3d(data);
                 
-                // Draw points
                 const points = g.selectAll(".point")
                     .data(points3d)
                     .enter()
@@ -535,27 +590,25 @@ def create_ml_visualization(df, zones_coords):
                     .attr("class", "point")
                     .attr("cx", d => d.projected.x)
                     .attr("cy", d => d.projected.y)
-                    .attr("r", 4)
+                    .attr("r", 3)
                     .attr("fill", d => colors[d.cluster])
-                    .attr("fill-opacity", 0.7)
+                    .attr("fill-opacity", 0.65)
                     .attr("stroke", "#ffffff")
-                    .attr("stroke-width", 0.5)
+                    .attr("stroke-width", 0.4)
                     .style("opacity", 0);
                 
-                // Animate appearance
                 points.transition()
-                    .duration(2000)
-                    .delay((d, i) => i * 2)
+                    .duration(1500)
+                    .delay((d, i) => i * 1.5)
                     .style("opacity", 1);
                 
-                // Legend
                 const legend = svg.append("g")
-                    .attr("transform", "translate(50, 100)");
+                    .attr("transform", "translate(40, 70)");
                 
                 clusterNames.forEach((name, i) => {{
                     const item = legend.append("g")
                         .attr("class", "legend-item")
-                        .attr("transform", `translate(0, ${{i * 25}})`)
+                        .attr("transform", `translate(0, ${{i * 20}})`)
                         .on("mouseover", function() {{
                             points.style("opacity", d => d.cluster === i ? 1 : 0.1);
                         }})
@@ -564,21 +617,20 @@ def create_ml_visualization(df, zones_coords):
                         }});
                     
                     item.append("circle")
-                        .attr("r", 6)
+                        .attr("r", 5)
                         .attr("fill", colors[i]);
                     
                     item.append("text")
-                        .attr("x", 15)
-                        .attr("y", 5)
+                        .attr("x", 12)
+                        .attr("y", 4)
                         .attr("fill", "#ffffff")
-                        .style("font-size", "12px")
+                        .style("font-size", "10px")
                         .text(name);
                 }});
                 
-                // Rotation animation
                 function rotate() {{
-                    alpha += 0.01;
-                    beta += 0.005;
+                    alpha += 0.008;
+                    beta += 0.004;
                     
                     const newPoints = point3d.rotateY(alpha).rotateX(beta)(data);
                     
@@ -595,40 +647,53 @@ def create_ml_visualization(df, zones_coords):
         </html>
         """
         
-        st.components.v1.html(html_3d, height=650)
+        st.components.v1.html(html_3d, height=450)
         
-        # Statistiques des clusters
         cluster_stats = pd.DataFrame(clusters, columns=['cluster'])
         cluster_counts = cluster_stats['cluster'].value_counts().sort_index()
         
         col1, col2 = st.columns(2)
         with col1:
-            st.markdown("#### Distribution des Segments")
+            st.markdown("##### Distribution des Segments")
             for i, name in cluster_names.items():
                 if i in cluster_counts.index:
                     pct = cluster_counts[i] / len(clusters) * 100
                     st.markdown(f"""
-                    <div style="margin: 10px 0;">
-                        <div style="display: flex; justify-content: space-between;">
+                    <div style="margin: 6px 0;">
+                        <div style="display: flex; justify-content: space-between; font-size: 0.75rem;">
                             <span>{name}</span>
-                            <span>{pct:.1f}%</span>
+                            <span style="color: #00d4ff;">{pct:.1f}%</span>
                         </div>
-                        <div style="background: #2a2a2a; height: 20px; border-radius: 10px;">
+                        <div style="background: #252525; height: 12px; border-radius: 6px;">
                             <div style="background: linear-gradient(90deg, #ff006e, #00d4ff); 
-                                       width: {pct}%; height: 100%; border-radius: 10px;"></div>
+                                       width: {pct}%; height: 100%; border-radius: 6px;"></div>
                         </div>
                     </div>
                     """, unsafe_allow_html=True)
         
         with col2:
-            st.markdown("#### Caractéristiques des Segments")
+            st.markdown("##### Caractéristiques")
             st.markdown("""
             <div class="guide-box">
-                <p><strong>🔴 Économique:</strong> Courts trajets, faibles tarifs, vitesse modérée</p>
-                <p><strong>🔵 Standard:</strong> Trajets moyens, tips standards, extras occasionnels</p>
-                <p><strong>🟢 Premium:</strong> Longues distances, tips élevés, vitesse rapide, extras fréquents</p>
+                <p><strong>🔴 Économique:</strong> Courts trajets, faibles tarifs</p>
+                <p><strong>🔵 Standard:</strong> Trajets moyens, tips standards</p>
+                <p><strong>🟢 Premium:</strong> Longues distances, tips élevés</p>
             </div>
             """, unsafe_allow_html=True)
+        
+        # Bouton pour forcer le ré-entraînement si nécessaire
+        st.markdown("<br>", unsafe_allow_html=True)
+        col_btn1, col_btn2, col_btn3 = st.columns([1, 1, 1])
+        with col_btn2:
+            if st.button(" Forcer ré-entraînement", help="Supprime le cache et ré-entraîne les modèles"):
+                # Supprimer les fichiers de modèles
+                for path in [TIP_MODEL_PATH, CLUSTER_MODEL_PATH, FEATURE_IMPORTANCE_PATH, MODEL_SCORE_PATH]:
+                    if os.path.exists(path):
+                        os.remove(path)
+                # Vider le cache Streamlit
+                st.cache_resource.clear()
+                st.cache_data.clear()
+                st.rerun()
 
-# Export de la fonction pour intégration
+
 __all__ = ['create_ml_visualization', 'TaxiMLPredictor']
