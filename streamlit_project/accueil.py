@@ -18,7 +18,7 @@ st.set_page_config(
     page_icon="🚕"
 )
 
-# ============= CUSTOM CSS - PROFESSIONAL DARK THEME =============
+# ============= CUSTOM CSS - PROFESSIONAL DARK THEME (LIGHT VERSION) =============
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
@@ -34,7 +34,7 @@ st.markdown("""
         --bg-primary: #0a0a0a;
         --bg-secondary: #141414;
         --bg-tertiary: #1a1a1a;
-        --border-color: #2a2a2a;
+        --border-color: #252525;
         --text-primary: #ffffff;
         --text-secondary: #a8a8a8;
         --text-tertiary: #6b6b6b;
@@ -56,19 +56,19 @@ st.markdown("""
         font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     }
     
-    /* Main Container */
+    /* Main Container - Reduced padding */
     .main .block-container {
-        padding: 2rem 2rem 3rem;
+        padding: 1.25rem 1.5rem 2rem;
         max-width: none;
     }
     
-    /* Header Banner */
+    /* Header Banner - More compact */
     .header-banner {
         background: linear-gradient(90deg, var(--bg-secondary) 0%, var(--bg-tertiary) 100%);
         border: 1px solid var(--border-color);
-        border-radius: 16px;
-        padding: 2.5rem 3rem;
-        margin-bottom: 2rem;
+        border-radius: 10px;
+        padding: 1.25rem 1.75rem;
+        margin-bottom: 1.25rem;
         position: relative;
         overflow: hidden;
     }
@@ -79,54 +79,48 @@ st.markdown("""
         top: 0;
         left: 0;
         right: 0;
-        height: 3px;
+        height: 2px;
         background: linear-gradient(90deg, var(--accent-pink) 0%, var(--accent-blue) 33%, var(--accent-green) 66%, var(--accent-orange) 100%);
-        animation: gradientShift 8s ease infinite;
-    }
-    
-    @keyframes gradientShift {
-        0%, 100% { opacity: 1; }
-        50% { opacity: 0.8; }
     }
     
     .header-title {
-        font-size: 2.5rem;
+        font-size: 1.6rem;
         font-weight: 700;
         background: linear-gradient(135deg, var(--accent-pink) 0%, var(--accent-blue) 100%);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
         background-clip: text;
-        margin-bottom: 0.5rem;
+        margin-bottom: 0.25rem;
         letter-spacing: -0.02em;
     }
     
     .header-subtitle {
         color: var(--text-secondary);
-        font-size: 1rem;
+        font-size: 0.8rem;
         font-weight: 400;
     }
     
-    /* Sidebar Styling */
+    /* Sidebar Styling - More compact */
     section[data-testid="stSidebar"] {
         background: var(--bg-secondary);
         border-right: 1px solid var(--border-color);
-        width: 320px !important;
+        width: 280px !important;
     }
     
     section[data-testid="stSidebar"] > div {
-        padding: 2rem 1.5rem;
+        padding: 1.25rem 1rem;
     }
     
-    /* Sidebar Logo Area */
+    /* Sidebar Logo Area - Smaller */
     .sidebar-logo {
         text-align: center;
-        padding: 1.5rem 0;
-        margin-bottom: 2rem;
+        padding: 0.75rem 0;
+        margin-bottom: 1rem;
         border-bottom: 1px solid var(--border-color);
     }
     
     .sidebar-logo-text {
-        font-size: 1.5rem;
+        font-size: 1.125rem;
         font-weight: 700;
         background: var(--gradient-pink);
         -webkit-background-clip: text;
@@ -134,58 +128,61 @@ st.markdown("""
         background-clip: text;
     }
     
-    /* Filter Section Headers */
+    /* Filter Section Headers - Compact */
     .filter-section {
         background: var(--bg-tertiary);
-        border-radius: 12px;
-        padding: 1rem;
-        margin-bottom: 1.5rem;
+        border-radius: 8px;
+        padding: 0.65rem;
+        margin-bottom: 0.85rem;
         border: 1px solid var(--border-color);
     }
     
     .filter-header {
         color: var(--text-primary);
-        font-size: 0.75rem;
+        font-size: 0.65rem;
         font-weight: 600;
         text-transform: uppercase;
-        letter-spacing: 0.08em;
-        margin-bottom: 1rem;
-        padding-left: 0.5rem;
+        letter-spacing: 0.06em;
+        margin-bottom: 0.6rem;
+        padding-left: 0.4rem;
         display: flex;
         align-items: center;
-        gap: 0.5rem;
+        gap: 0.4rem;
     }
     
     .filter-header::before {
         content: '';
-        width: 3px;
-        height: 1rem;
+        width: 2px;
+        height: 0.75rem;
         background: var(--gradient-pink);
-        border-radius: 2px;
+        border-radius: 1px;
     }
     
-    /* KPI Cards */
+    /* KPI Cards - Slim version */
     .kpi-container {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-        gap: 1.5rem;
-        margin-bottom: 2rem;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 0.85rem;
+        margin-bottom: 1.25rem;
     }
     
     .kpi-card {
         background: var(--bg-secondary);
         border: 1px solid var(--border-color);
-        border-radius: 16px;
-        padding: 1.75rem;
+        border-radius: 10px;
+        padding: 0.85rem 1rem;
         position: relative;
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        transition: all 0.25s ease;
         overflow: hidden;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
     }
     
     .kpi-card:hover {
-        transform: translateY(-4px);
+        transform: translateY(-2px);
         border-color: var(--accent-pink);
-        box-shadow: 0 12px 32px rgba(255, 0, 110, 0.15);
+        box-shadow: 0 6px 20px rgba(255, 0, 110, 0.12);
     }
     
     .kpi-card::before {
@@ -197,43 +194,29 @@ st.markdown("""
         height: 2px;
         background: var(--gradient-pink);
         opacity: 0;
-        transition: opacity 0.3s ease;
+        transition: opacity 0.25s ease;
     }
     
     .kpi-card:hover::before {
         opacity: 1;
     }
     
-    .kpi-card:nth-child(2)::before,
-    .kpi-card:nth-child(2):hover {
-        background: var(--gradient-blue);
-        border-color: var(--accent-blue);
-        box-shadow: 0 12px 32px rgba(0, 212, 255, 0.15);
-    }
-    
-    .kpi-card:nth-child(3)::before,
-    .kpi-card:nth-child(3):hover {
-        background: var(--gradient-green);
-        border-color: var(--accent-green);
-        box-shadow: 0 12px 32px rgba(0, 255, 136, 0.15);
-    }
-    
-    .kpi-card:nth-child(4)::before,
-    .kpi-card:nth-child(4):hover {
-        background: var(--gradient-orange);
-        border-color: var(--accent-orange);
-        box-shadow: 0 12px 32px rgba(255, 149, 0, 0.15);
-    }
+    .kpi-card:nth-child(2)::before { background: var(--gradient-blue); }
+    .kpi-card:nth-child(2):hover { border-color: var(--accent-blue); box-shadow: 0 6px 20px rgba(0, 212, 255, 0.12); }
+    .kpi-card:nth-child(3)::before { background: var(--gradient-green); }
+    .kpi-card:nth-child(3):hover { border-color: var(--accent-green); box-shadow: 0 6px 20px rgba(0, 255, 136, 0.12); }
+    .kpi-card:nth-child(4)::before { background: var(--gradient-orange); }
+    .kpi-card:nth-child(4):hover { border-color: var(--accent-orange); box-shadow: 0 6px 20px rgba(255, 149, 0, 0.12); }
     
     .kpi-icon {
-        width: 48px;
-        height: 48px;
-        border-radius: 12px;
+        width: 32px;
+        height: 32px;
+        border-radius: 8px;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 1.5rem;
-        margin-bottom: 1rem;
+        font-size: 1rem;
+        flex-shrink: 0;
     }
     
     .kpi-icon-pink { background: rgba(255, 0, 110, 0.1); color: var(--accent-pink); }
@@ -241,103 +224,88 @@ st.markdown("""
     .kpi-icon-green { background: rgba(0, 255, 136, 0.1); color: var(--accent-green); }
     .kpi-icon-orange { background: rgba(255, 149, 0, 0.1); color: var(--accent-orange); }
     
+    .kpi-content {
+        flex: 1;
+        min-width: 0;
+    }
+    
     .kpi-value {
-        font-size: 2rem;
+        font-size: 1.35rem;
         font-weight: 700;
         color: var(--text-primary);
-        margin-bottom: 0.25rem;
-        line-height: 1.2;
+        line-height: 1.1;
     }
     
     .kpi-label {
-        font-size: 0.875rem;
+        font-size: 0.65rem;
         color: var(--text-secondary);
         font-weight: 500;
         text-transform: uppercase;
-        letter-spacing: 0.05em;
+        letter-spacing: 0.04em;
+        margin-top: 0.1rem;
     }
     
-    .kpi-change {
-        position: absolute;
-        top: 1.75rem;
-        right: 1.75rem;
-        font-size: 0.75rem;
-        font-weight: 600;
-        padding: 0.25rem 0.75rem;
-        border-radius: 20px;
-        background: rgba(0, 255, 136, 0.1);
-        color: var(--accent-green);
-    }
-    
-    .kpi-change.negative {
-        background: rgba(255, 0, 110, 0.1);
-        color: var(--accent-pink);
-    }
-    
-    /* Chart Containers */
+    /* Chart Containers - Compact */
     .chart-container {
         background: var(--bg-secondary);
         border: 1px solid var(--border-color);
-        border-radius: 16px;
-        padding: 1.5rem;
-        margin-bottom: 1.5rem;
-        transition: all 0.3s ease;
+        border-radius: 10px;
+        padding: 0.85rem;
+        margin-bottom: 1rem;
+        transition: all 0.25s ease;
     }
     
     .chart-container:hover {
-        border-color: #3a3a3a;
-        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+        border-color: #333;
     }
     
     .chart-header {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        margin-bottom: 1rem;
-        padding-bottom: 1rem;
-        border-bottom: 1px solid var(--border-color);
+        margin-bottom: 0.5rem;
     }
     
     .chart-title {
-        font-size: 1.125rem;
+        font-size: 0.9rem;
         font-weight: 600;
         color: var(--text-primary);
     }
     
     .chart-badge {
-        font-size: 0.75rem;
-        padding: 0.25rem 0.75rem;
-        border-radius: 20px;
+        font-size: 0.6rem;
+        padding: 0.15rem 0.5rem;
+        border-radius: 10px;
         background: rgba(139, 92, 246, 0.1);
         color: var(--accent-purple);
         font-weight: 600;
     }
     
-    /* Buttons */
+    /* Buttons - Slim */
     .stButton > button {
         background: var(--gradient-pink);
         color: white;
         border: none;
-        border-radius: 12px;
-        padding: 0.75rem 1.5rem;
+        border-radius: 8px;
+        padding: 0.5rem 1rem;
         font-weight: 600;
-        font-size: 0.875rem;
-        letter-spacing: 0.025em;
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        font-size: 0.75rem;
+        letter-spacing: 0.02em;
+        transition: all 0.25s ease;
         width: 100%;
-        box-shadow: 0 4px 12px rgba(255, 0, 110, 0.2);
+        box-shadow: 0 2px 8px rgba(255, 0, 110, 0.15);
     }
     
     .stButton > button:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 8px 20px rgba(255, 0, 110, 0.3);
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(255, 0, 110, 0.25);
     }
     
-    /* Sliders */
+    /* Sliders - Compact */
     .stSlider > div > div {
         background: var(--bg-tertiary);
-        border-radius: 8px;
-        padding: 0.5rem;
+        border-radius: 6px;
+        padding: 0.35rem;
     }
     
     .stSlider [data-baseweb="slider"] {
@@ -350,14 +318,14 @@ st.markdown("""
     
     div[data-baseweb="slider"] > div > div {
         background: white !important;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+        box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
     }
     
-    /* Select Boxes */
+    /* Select Boxes - Compact */
     .stSelectbox > div > div {
         background: var(--bg-tertiary);
         border: 1px solid var(--border-color);
-        border-radius: 8px;
+        border-radius: 6px;
         color: var(--text-primary);
         transition: all 0.2s ease;
     }
@@ -370,7 +338,7 @@ st.markdown("""
     .stMultiSelect > div > div {
         background: var(--bg-tertiary);
         border: 1px solid var(--border-color);
-        border-radius: 8px;
+        border-radius: 6px;
     }
     
     .stMultiSelect [data-baseweb="tag"] {
@@ -378,19 +346,19 @@ st.markdown("""
         color: white;
     }
     
-    /* Sections */
+    /* Sections - Reduced spacing */
     .section-divider {
         height: 1px;
         background: linear-gradient(90deg, transparent, var(--border-color), transparent);
-        margin: 3rem 0;
+        margin: 1.5rem 0;
     }
     
-    /* Guide Box */
+    /* Guide Box - Compact */
     .guide-box {
         background: var(--bg-tertiary);
         border: 1px solid var(--border-color);
-        border-radius: 12px;
-        padding: 1.5rem;
+        border-radius: 8px;
+        padding: 0.85rem;
         height: 100%;
         position: relative;
         overflow: hidden;
@@ -401,25 +369,25 @@ st.markdown("""
         position: absolute;
         top: 0;
         left: 0;
-        width: 3px;
+        width: 2px;
         height: 100%;
         background: var(--gradient-blue);
     }
     
     .guide-box h4 {
         color: var(--accent-blue);
-        font-size: 1rem;
+        font-size: 0.75rem;
         font-weight: 600;
-        margin-bottom: 1rem;
+        margin-bottom: 0.6rem;
         text-transform: uppercase;
-        letter-spacing: 0.05em;
+        letter-spacing: 0.04em;
     }
     
     .guide-box p {
         color: var(--text-secondary);
-        font-size: 0.875rem;
-        line-height: 1.6;
-        margin-bottom: 0.75rem;
+        font-size: 0.7rem;
+        line-height: 1.4;
+        margin-bottom: 0.4rem;
     }
     
     .guide-box p strong {
@@ -427,19 +395,19 @@ st.markdown("""
         font-weight: 600;
     }
     
-    /* Metrics */
+    /* Metrics - Compact */
     [data-testid="metric-container"] {
         background: var(--bg-secondary);
         border: 1px solid var(--border-color);
-        border-radius: 12px;
-        padding: 1rem;
+        border-radius: 8px;
+        padding: 0.6rem;
     }
     
     [data-testid="metric-container"] label {
         color: var(--text-secondary);
-        font-size: 0.75rem;
+        font-size: 0.65rem;
         text-transform: uppercase;
-        letter-spacing: 0.05em;
+        letter-spacing: 0.04em;
     }
     
     [data-testid="metric-container"] [data-testid="metric-value"] {
@@ -447,11 +415,11 @@ st.markdown("""
         font-weight: 700;
     }
     
-    /* Dataframes */
+    /* Dataframes - Compact */
     .dataframe {
         background: var(--bg-secondary) !important;
         border: 1px solid var(--border-color) !important;
-        border-radius: 12px;
+        border-radius: 8px;
         overflow: hidden;
     }
     
@@ -460,25 +428,26 @@ st.markdown("""
         color: var(--text-primary) !important;
         font-weight: 600;
         text-transform: uppercase;
-        font-size: 0.75rem;
-        letter-spacing: 0.05em;
-        border-bottom: 2px solid var(--accent-pink) !important;
+        font-size: 0.65rem;
+        letter-spacing: 0.04em;
+        border-bottom: 1px solid var(--accent-pink) !important;
     }
     
     .dataframe tbody td {
         background: var(--bg-secondary) !important;
         color: var(--text-primary) !important;
         border-color: var(--border-color) !important;
+        font-size: 0.75rem;
     }
     
     .dataframe tbody tr:hover td {
         background: var(--bg-tertiary) !important;
     }
     
-    /* Scrollbar */
+    /* Scrollbar - Thinner */
     ::-webkit-scrollbar {
-        width: 10px;
-        height: 10px;
+        width: 6px;
+        height: 6px;
     }
     
     ::-webkit-scrollbar-track {
@@ -487,31 +456,31 @@ st.markdown("""
     
     ::-webkit-scrollbar-thumb {
         background: var(--border-color);
-        border-radius: 5px;
+        border-radius: 3px;
     }
     
     ::-webkit-scrollbar-thumb:hover {
         background: #3a3a3a;
     }
     
-    /* Tooltips */
+    /* Tooltips - Compact */
     .tooltip {
         background: rgba(10, 10, 10, 0.95) !important;
         border: 1px solid var(--accent-pink) !important;
-        border-radius: 8px;
-        padding: 0.75rem !important;
-        font-size: 0.875rem;
-        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
+        border-radius: 6px;
+        padding: 0.5rem !important;
+        font-size: 0.75rem;
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
     }
     
     /* Animations */
     @keyframes fadeIn {
-        from { opacity: 0; transform: translateY(10px); }
+        from { opacity: 0; transform: translateY(6px); }
         to { opacity: 1; transform: translateY(0); }
     }
     
     .kpi-card, .chart-container {
-        animation: fadeIn 0.5s ease-out;
+        animation: fadeIn 0.4s ease-out;
     }
     
     /* Plotly Dark Theme Override */
@@ -525,6 +494,16 @@ st.markdown("""
     
     .js-plotly-plot .plotly .modebar-btn:hover {
         color: var(--accent-pink) !important;
+    }
+    
+    /* Tabs styling */
+    .stTabs [data-baseweb="tab-list"] {
+        gap: 0.5rem;
+    }
+    
+    .stTabs [data-baseweb="tab"] {
+        font-size: 0.75rem;
+        padding: 0.5rem 1rem;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -637,9 +616,7 @@ with st.sidebar:
     )
     st.markdown('</div>', unsafe_allow_html=True)
     
-    st.markdown("<br>", unsafe_allow_html=True)
-    
-    if st.button("🔄 Réinitialiser les Filtres", use_container_width=True):
+    if st.button(" Réinitialiser", use_container_width=True):
         st.rerun()
 
 # ============= FILTER DATA =============
@@ -680,9 +657,10 @@ with col1:
     st.markdown(f"""
     <div class="kpi-card">
         <div class="kpi-icon kpi-icon-pink">📍</div>
-        <div class="kpi-value">{len(G.nodes())}</div>
-        <div class="kpi-label">Zones Actives</div>
-        <span class="kpi-change">+12%</span>
+        <div class="kpi-content">
+            <div class="kpi-value">{len(G.nodes())}</div>
+            <div class="kpi-label">Zones Actives</div>
+        </div>
     </div>
     """, unsafe_allow_html=True)
 
@@ -690,9 +668,10 @@ with col2:
     st.markdown(f"""
     <div class="kpi-card">
         <div class="kpi-icon kpi-icon-blue">🔗</div>
-        <div class="kpi-value">{len(G.edges())}</div>
-        <div class="kpi-label">Connexions</div>
-        <span class="kpi-change">+8%</span>
+        <div class="kpi-content">
+            <div class="kpi-value">{len(G.edges())}</div>
+            <div class="kpi-label">Connexions</div>
+        </div>
     </div>
     """, unsafe_allow_html=True)
 
@@ -700,9 +679,10 @@ with col3:
     st.markdown(f"""
     <div class="kpi-card">
         <div class="kpi-icon kpi-icon-green">🚖</div>
-        <div class="kpi-value">{flows['trips'].sum():,.0f}</div>
-        <div class="kpi-label">Total Trajets</div>
-        <span class="kpi-change">+15%</span>
+        <div class="kpi-content">
+            <div class="kpi-value">{flows['trips'].sum():,.0f}</div>
+            <div class="kpi-label">Total Trajets</div>
+        </div>
     </div>
     """, unsafe_allow_html=True)
 
@@ -710,9 +690,10 @@ with col4:
     st.markdown(f"""
     <div class="kpi-card">
         <div class="kpi-icon kpi-icon-orange">💰</div>
-        <div class="kpi-value">${flows['total_amount'].sum()/1000:.0f}K</div>
-        <div class="kpi-label">Revenu Total</div>
-        <span class="kpi-change negative">-3%</span>
+        <div class="kpi-content">
+            <div class="kpi-value">${flows['total_amount'].sum()/1000:.0f}K</div>
+            <div class="kpi-label">Revenu Total</div>
+        </div>
     </div>
     """, unsafe_allow_html=True)
 
@@ -722,7 +703,7 @@ st.markdown('<div class="section-divider"></div>', unsafe_allow_html=True)
 # ============= NETWORK VISUALIZATION =============
 st.markdown("""
 <div class="chart-header">
-    <h2 class="chart-title">🌐 Visualisation du Réseau de Taxis</h2>
+    <h2 class="chart-title"> Visualisation du Réseau de Taxis</h2>
     <span class="chart-badge">LIVE</span>
 </div>
 """, unsafe_allow_html=True)
@@ -802,7 +783,7 @@ graph_data = {
     'edges': edges
 }
 
-col_graph, col_guide = st.columns([3, 1], gap="large")
+col_graph, col_guide = st.columns([4, 1], gap="medium")
 
 with col_graph:
     st.markdown('<div class="chart-container">', unsafe_allow_html=True)
@@ -832,60 +813,60 @@ with col_graph:
             }}
             #graph {{
                 width: 100%;
-                height: 500px;
+                height: 380px;
                 background: radial-gradient(circle at center, #1a1a1a 0%, #0a0a0a 100%);
-                border-radius: 16px;
+                border-radius: 10px;
                 position: relative;
             }}
             .node {{
                 stroke: white;
-                stroke-width: 2px;
+                stroke-width: 1.5px;
                 cursor: pointer;
-                filter: drop-shadow(0 0 4px rgba(255, 255, 255, 0.1));
-                transition: all 0.3s ease;
+                filter: drop-shadow(0 0 3px rgba(255, 255, 255, 0.1));
+                transition: all 0.25s ease;
             }}
             .node:hover {{
                 stroke: #00d4ff;
-                stroke-width: 3px;
-                filter: drop-shadow(0 0 12px rgba(0, 212, 255, 0.6));
+                stroke-width: 2px;
+                filter: drop-shadow(0 0 8px rgba(0, 212, 255, 0.5));
             }}
             .node.highlighted {{
                 stroke: #ff006e;
-                stroke-width: 3px;
-                filter: drop-shadow(0 0 16px rgba(255, 0, 110, 0.8));
+                stroke-width: 2px;
+                filter: drop-shadow(0 0 10px rgba(255, 0, 110, 0.7));
             }}
             .link {{
-                stroke-opacity: 0.6;
+                stroke-opacity: 0.5;
                 pointer-events: none;
             }}
             .link.highlighted {{
                 stroke: #ff9500;
-                stroke-width: 3px;
+                stroke-width: 2px;
                 stroke-opacity: 1;
-                filter: drop-shadow(0 0 8px rgba(255, 149, 0, 0.5));
+                filter: drop-shadow(0 0 6px rgba(255, 149, 0, 0.4));
             }}
             .label {{
-                font-size: 11px;
+                font-size: 9px;
                 font-weight: 600;
                 text-anchor: middle;
                 pointer-events: none;
                 user-select: none;
                 fill: #ffffff;
-                text-shadow: 0 0 4px rgba(0, 0, 0, 0.8);
+                text-shadow: 0 0 3px rgba(0, 0, 0, 0.8);
             }}
             .tooltip {{
                 position: absolute;
-                padding: 12px 16px;
-                background: linear-gradient(135deg, rgba(20, 20, 20, 0.98) 0%, rgba(26, 26, 26, 0.98) 100%);
+                padding: 8px 12px;
+                background: rgba(20, 20, 20, 0.95);
                 color: #ffffff;
                 border: 1px solid #ff006e;
-                border-radius: 12px;
-                font-size: 13px;
+                border-radius: 8px;
+                font-size: 11px;
                 font-weight: 500;
                 pointer-events: none;
                 display: none;
                 z-index: 1000;
-                box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
+                box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
             }}
             .tooltip strong {{
                 color: #00d4ff;
@@ -900,7 +881,7 @@ with col_graph:
             const data = {json.dumps(d3_data)};
             
             const width = document.getElementById('graph').clientWidth;
-            const height = 500;
+            const height = 380;
             
             const svg = d3.select('#graph')
                 .append('svg')
@@ -912,13 +893,13 @@ with col_graph:
             const simulation = d3.forceSimulation(data.nodes)
                 .force('link', d3.forceLink(data.links)
                     .id(d => d.id)
-                    .distance(100)
+                    .distance(80)
                     .strength(0.5))
                 .force('charge', d3.forceManyBody()
-                    .strength(-400)
-                    .distanceMax(500))
+                    .strength(-350)
+                    .distanceMax(400))
                 .force('center', d3.forceCenter(width / 2, height / 2))
-                .force('collision', d3.forceCollide().radius(d => d.size + 10));
+                .force('collision', d3.forceCollide().radius(d => d.size + 8));
             
             const zoom = d3.zoom()
                 .scaleExtent([0.3, 8])
@@ -935,7 +916,7 @@ with col_graph:
                 .attr('class', 'link')
                 .attr('stroke', d => d.color)
                 .attr('stroke-width', d => d.value)
-                .attr('opacity', 0.6);
+                .attr('opacity', 0.5);
             
             const node = g.selectAll('.node')
                 .data(data.nodes)
@@ -954,9 +935,9 @@ with col_graph:
                     
                     const tooltip = d3.select('#tooltip');
                     tooltip.style('display', 'block')
-                        .html(`<strong>${{d.label}}</strong><br>📍 ${{d.borough}}<br>🔗 ${{d.size.toFixed(0)}} connexions`)
-                        .style('left', (event.pageX + 10) + 'px')
-                        .style('top', (event.pageY - 28) + 'px');
+                        .html(`<strong>${{d.label}}</strong><br>📍 ${{d.borough}}<br>🔗 ${{d.size.toFixed(0)}} conn.`)
+                        .style('left', (event.pageX + 8) + 'px')
+                        .style('top', (event.pageY - 20) + 'px');
                 }})
                 .on('mouseout', () => {{
                     node.classed('highlighted', false);
@@ -969,8 +950,8 @@ with col_graph:
                 .enter()
                 .append('text')
                 .attr('class', 'label')
-                .attr('dy', -14)
-                .text(d => d.label.length > 20 ? d.label.substring(0, 20) + '...' : d.label);
+                .attr('dy', -10)
+                .text(d => d.label.length > 15 ? d.label.substring(0, 15) + '...' : d.label);
             
             simulation.on('tick', () => {{
                 link
@@ -1007,28 +988,20 @@ with col_graph:
     </html>
     """
 
-    st.components.v1.html(html_code, height=520, scrolling=False)
+    st.components.v1.html(html_code, height=400, scrolling=False)
     st.markdown('</div>', unsafe_allow_html=True)
 
 with col_guide:
     st.markdown("""
     <div class="guide-box">
-        <h4>Guide d'Utilisation</h4>
-        <p><strong>Codes Couleur:</strong></p>
-        <p>🔴 Rose : Zones standards</p>
-        <p>🟢 Vert : Zones de départ</p>
-        <p>🔵 Bleu : Zones d'arrivée</p>
-        <p>🟣 Violet : Zones mixtes</p>
-        
-        <p><strong>Interactions:</strong></p>
-        <p>🖱️ Glisser pour déplacer</p>
-        <p>📍 Survoler pour détails</p>
-        <p>🔍 Scroll pour zoomer</p>
-        <p>🎯 Double-clic pour fixer</p>
-        
-        <p><strong>Connexions:</strong></p>
-        <p>🟠 Orange : Flux filtrés</p>
-        <p>⚫ Gris : Autres flux</p>
+        <h4>Légende</h4>
+        <p>🔴 : Zones standards</p>
+        <p>🟢 : Départ</p>
+        <p>🔵 : Arrivée</p>
+        <p>🟣 : Violet: Mixte</p>
+        <p style="margin-top: 0.5rem;"><strong>Interactions:</strong></p>
+        <p> Glisser /  Zoom</p>
+        <p>🟠: Flux filtrés</p>
     </div>
     """, unsafe_allow_html=True)
 
@@ -1037,12 +1010,12 @@ st.markdown('<div class="section-divider"></div>', unsafe_allow_html=True)
 # ============= SANKEY DIAGRAM =============
 st.markdown("""
 <div class="chart-header">
-    <h2 class="chart-title">🌊 Analyse des Flux - Diagramme Sankey</h2>
+    <h2 class="chart-title"> Analyse des Flux - Diagramme Sankey</h2>
     <span class="chart-badge">INTERACTIVE</span>
 </div>
 """, unsafe_allow_html=True)
 
-col_sankey, col_sankey_stats = st.columns([3, 1], gap="large")
+col_sankey, col_sankey_stats = st.columns([4, 1], gap="medium")
 
 with col_sankey:
     st.markdown('<div class="chart-container">', unsafe_allow_html=True)
@@ -1062,7 +1035,7 @@ with col_sankey:
     for zone in unique_zones:
         zone_name = zones_coords.get(zone, {}).get('name', f'Zone {zone}')
         zone_borough = zones_coords.get(zone, {}).get('borough', 'Unknown')
-        node_labels.append(f"{zone_name}<br><span style='font-size:10px'>{zone_borough}</span>")
+        node_labels.append(f"{zone_name[:18]}")
         
         if depart_borough and zone_borough == depart_borough:
             node_colors.append('#00ff88')
@@ -1081,21 +1054,21 @@ with col_sankey:
         
         if depart_borough and arrivee_borough:
             if pu_borough == depart_borough and do_borough == arrivee_borough:
-                link_colors.append('rgba(255, 149, 0, 0.6)')
+                link_colors.append('rgba(255, 149, 0, 0.5)')
             else:
-                link_colors.append('rgba(74, 74, 74, 0.3)')
+                link_colors.append('rgba(74, 74, 74, 0.25)')
         elif depart_borough and pu_borough == depart_borough:
-            link_colors.append('rgba(0, 255, 136, 0.5)')
+            link_colors.append('rgba(0, 255, 136, 0.4)')
         elif arrivee_borough and do_borough == arrivee_borough:
-            link_colors.append('rgba(0, 212, 255, 0.5)')
+            link_colors.append('rgba(0, 212, 255, 0.4)')
         else:
-            link_colors.append('rgba(255, 0, 110, 0.4)')
+            link_colors.append('rgba(255, 0, 110, 0.35)')
     
     fig = go.Figure(data=[go.Sankey(
         node=dict(
-            pad=20,
-            thickness=25,
-            line=dict(color="rgba(255, 255, 255, 0.1)", width=1),
+            pad=15,
+            thickness=18,
+            line=dict(color="rgba(255, 255, 255, 0.08)", width=0.5),
             label=node_labels,
             color=node_colors,
             hovertemplate='<b>%{label}</b><br>Total: %{value:,.0f} trajets<extra></extra>'
@@ -1110,36 +1083,30 @@ with col_sankey:
     )])
     
     fig.update_layout(
-        font={'size': 12, 'color': '#ffffff', 'family': 'Inter'},
+        font={'size': 10, 'color': '#ffffff', 'family': 'Inter'},
         paper_bgcolor='rgba(0, 0, 0, 0)',
         plot_bgcolor='rgba(0, 0, 0, 0)',
-        height=600,
-        margin=dict(l=0, r=0, t=0, b=0)
+        height=420,
+        margin=dict(l=0, r=0, t=10, b=10)
     )
     
     st.plotly_chart(fig, use_container_width=True)
     st.markdown('</div>', unsafe_allow_html=True)
 
 with col_sankey_stats:
-    st.markdown("""
-    <div class="guide-box">
-        <h4>Statistiques Flux</h4>
-    """, unsafe_allow_html=True)
-    
     total_sankey_trips = top_flows_sankey['trips'].sum()
     avg_sankey_trips = top_flows_sankey['trips'].mean()
     max_flow = top_flows_sankey.nlargest(1, 'trips').iloc[0]
     
     st.markdown(f"""
-        <p><strong>📊 Métriques:</strong></p>
-        <p>Total trajets: <strong>{total_sankey_trips:,.0f}</strong></p>
-        <p>Moyenne: <strong>{avg_sankey_trips:.0f}</strong></p>
-        <p>Routes: <strong>{len(top_flows_sankey)}</strong></p>
-        
-        <p><strong>🏆 Top Route:</strong></p>
-        <p>{zones_coords[max_flow['PULocationID']]['name'][:20]}</p>
-        <p>↓</p>
-        <p>{zones_coords[max_flow['DOLocationID']]['name'][:20]}</p>
+    <div class="guide-box">
+        <h4>Stats Flux</h4>
+        <p><strong>Total:</strong> {total_sankey_trips:,.0f}</p>
+        <p><strong>Moyenne:</strong> {avg_sankey_trips:.0f}</p>
+        <p><strong>Routes:</strong> {len(top_flows_sankey)}</p>
+        <p style="margin-top: 0.5rem;"><strong> Top:</strong></p>
+        <p>{zones_coords[max_flow['PULocationID']]['name'][:15]}</p>
+        <p>→ {zones_coords[max_flow['DOLocationID']]['name'][:15]}</p>
         <p><strong>{max_flow['trips']:,.0f}</strong> trajets</p>
     </div>
     """, unsafe_allow_html=True)
@@ -1149,7 +1116,7 @@ st.markdown('<div class="section-divider"></div>', unsafe_allow_html=True)
 # ============= ECONOMIC ANALYSIS =============
 st.markdown("""
 <div class="chart-header">
-    <h2 class="chart-title">💰 Analyse Économique Spatio-Temporelle</h2>
+    <h2 class="chart-title"> Analyse Économique Spatio-Temporelle</h2>
     <span class="chart-badge">ANALYTICS</span>
 </div>
 """, unsafe_allow_html=True)
@@ -1161,7 +1128,7 @@ df['revenue_per_km'] = df['total_amount'] / (df['trip_distance'] + 0.01)
 days_map = {0: 'Lun', 1: 'Mar', 2: 'Mer', 3: 'Jeu', 4: 'Ven', 5: 'Sam', 6: 'Dim'}
 df['day_name'] = df['day_of_week'].map(days_map)
 
-col_eco1, col_eco2, col_eco3 = st.columns(3, gap="medium")
+col_eco1, col_eco2, col_eco3 = st.columns(3, gap="small")
 
 # Hourly Revenue Chart
 with col_eco1:
@@ -1180,22 +1147,23 @@ with col_eco1:
         y=hourly_stats['total_amount'],
         mode='lines+markers',
         name='Revenu moyen',
-        line=dict(color='#ff006e', width=3),
-        marker=dict(size=8, color='#ff006e'),
+        line=dict(color='#ff006e', width=2),
+        marker=dict(size=5, color='#ff006e'),
         fill='tozeroy',
-        fillcolor='rgba(255, 0, 110, 0.1)'
+        fillcolor='rgba(255, 0, 110, 0.08)'
     ))
     
     fig_hourly.update_layout(
-        title={'text': '📈 Rentabilité Horaire', 'font': {'size': 14, 'color': '#ffffff'}},
-        xaxis={'title': 'Heure', 'color': '#a8a8a8', 'gridcolor': '#2a2a2a', 'zerolinecolor': '#2a2a2a'},
-        yaxis={'title': 'Revenu moyen ($)', 'color': '#a8a8a8', 'gridcolor': '#2a2a2a', 'zerolinecolor': '#2a2a2a'},
+        title={'text': ' Rentabilité Horaire', 'font': {'size': 12, 'color': '#ffffff'}},
+        xaxis={'title': '', 'color': '#a8a8a8', 'gridcolor': '#252525', 'zerolinecolor': '#252525', 'tickfont': {'size': 9}},
+        yaxis={'title': '', 'color': '#a8a8a8', 'gridcolor': '#252525', 'zerolinecolor': '#252525', 'tickfont': {'size': 9}},
         paper_bgcolor='rgba(0, 0, 0, 0)',
         plot_bgcolor='rgba(0, 0, 0, 0)',
         font={'color': '#ffffff'},
-        height=350,
+        height=260,
         showlegend=False,
-        hovermode='x unified'
+        hovermode='x unified',
+        margin=dict(l=30, r=10, t=35, b=25)
     )
     
     st.plotly_chart(fig_hourly, use_container_width=True)
@@ -1220,25 +1188,23 @@ with col_eco2:
             [1, '#00ff88']
         ],
         colorbar=dict(
-            title=dict(
-                text='$/trajet',
-                font=dict(color='#a8a8a8', size=10)
-            ),
-            tickfont=dict(color='#a8a8a8'),
-            thickness=10,
-            len=0.6
+            title=dict(text='$/trajet', font=dict(color='#a8a8a8', size=9)),
+            tickfont=dict(color='#a8a8a8', size=8),
+            thickness=8,
+            len=0.5
         ),
         hovertemplate='%{y} %{x}<br>$%{z:.2f}<extra></extra>'
     ))
     
     fig_heatmap.update_layout(
-        title={'text': '🗓️ Patterns Hebdomadaires', 'font': {'size': 14, 'color': '#ffffff'}},
-        xaxis={'title': '', 'color': '#a8a8a8', 'tickfont': {'size': 10}},
-        yaxis={'title': '', 'color': '#a8a8a8'},
+        title={'text': ' Patterns Hebdo', 'font': {'size': 12, 'color': '#ffffff'}},
+        xaxis={'title': '', 'color': '#a8a8a8', 'tickfont': {'size': 8}},
+        yaxis={'title': '', 'color': '#a8a8a8', 'tickfont': {'size': 9}},
         paper_bgcolor='rgba(0, 0, 0, 0)',
         plot_bgcolor='rgba(0, 0, 0, 0)',
         font={'color': '#ffffff'},
-        height=350
+        height=260,
+        margin=dict(l=35, r=10, t=35, b=25)
     )
     
     st.plotly_chart(fig_heatmap, use_container_width=True)
@@ -1256,10 +1222,10 @@ with col_eco3:
     zone_stats.columns = ['zone_id', 'revenue_total', 'revenue_mean', 'distance_mean', 'trip_count']
     zone_stats['efficiency'] = zone_stats['revenue_mean'] / (zone_stats['distance_mean'] + 0.01)
     zone_stats['zone_name'] = zone_stats['zone_id'].apply(
-        lambda x: zones_coords.get(x, {}).get('name', f'Zone {x}')[:20]
+        lambda x: zones_coords.get(x, {}).get('name', f'Zone {x}')[:16]
     )
     
-    top_zones = zone_stats.nlargest(8, 'revenue_total')
+    top_zones = zone_stats.nlargest(6, 'revenue_total')
     
     fig_zones = go.Figure(data=[
         go.Bar(
@@ -1268,29 +1234,25 @@ with col_eco3:
             orientation='h',
             marker=dict(
                 color=top_zones['efficiency'],
-                colorscale=[
-                    [0, '#ff006e'],
-                    [0.5, '#ff9500'],
-                    [1, '#00ff88']
-                ],
+                colorscale=[[0, '#ff006e'], [0.5, '#ff9500'], [1, '#00ff88']],
                 showscale=False
             ),
             text=[f'${x:.0f}' for x in top_zones['revenue_mean']],
             textposition='outside',
-            textfont=dict(color='#ffffff', size=10),
-            hovertemplate='<b>%{y}</b><br>$%{x:.2f}/trajet<br>Efficacité: %{marker.color:.1f} $/km<extra></extra>'
+            textfont=dict(color='#ffffff', size=9),
+            hovertemplate='<b>%{y}</b><br>$%{x:.2f}/trajet<extra></extra>'
         )
     ])
     
     fig_zones.update_layout(
-        title={'text': '🏆 Top Zones Rentables', 'font': {'size': 14, 'color': '#ffffff'}},
-        xaxis={'title': '', 'color': '#a8a8a8', 'gridcolor': '#2a2a2a', 'showticklabels': False},
-        yaxis={'title': '', 'color': '#ffffff', 'tickfont': {'size': 10}},
+        title={'text': ' Top Zones', 'font': {'size': 12, 'color': '#ffffff'}},
+        xaxis={'title': '', 'color': '#a8a8a8', 'gridcolor': '#252525', 'showticklabels': False},
+        yaxis={'title': '', 'color': '#ffffff', 'tickfont': {'size': 9}},
         paper_bgcolor='rgba(0, 0, 0, 0)',
         plot_bgcolor='rgba(0, 0, 0, 0)',
         font={'color': '#ffffff'},
-        height=350,
-        margin=dict(l=120, r=40, t=40, b=40)
+        height=260,
+        margin=dict(l=90, r=35, t=35, b=25)
     )
     
     st.plotly_chart(fig_zones, use_container_width=True)
@@ -1301,12 +1263,12 @@ st.markdown('<div class="section-divider"></div>', unsafe_allow_html=True)
 # ============= 3D MAP =============
 st.markdown("""
 <div class="chart-header">
-    <h2 class="chart-title">🗺️ Carte 3D Interactive</h2>
+    <h2 class="chart-title"> Carte 3D Interactive</h2>
     <span class="chart-badge">3D VIEW</span>
 </div>
 """, unsafe_allow_html=True)
 
-col_map3d, col_controls = st.columns([3, 1], gap="large")
+col_map3d, col_controls = st.columns([4, 1], gap="medium")
 
 with col_controls:
     st.markdown("""
@@ -1320,7 +1282,7 @@ with col_controls:
         label_visibility="collapsed"
     )
     
-    show_top_n = st.slider("🏆 Top zones", 10, 50, 25)
+    show_top_n = st.slider(" Top zones", 10, 50, 25)
     
     color_scheme = st.selectbox(
         "🎨 Palette",
@@ -1364,7 +1326,7 @@ with col_map3d:
             y=[row['lat'], row['lat']],
             z=[0, row[selected_metric]],
             mode='lines',
-            line=dict(color='rgba(255, 0, 110, 0.3)', width=4),
+            line=dict(color='rgba(255, 0, 110, 0.25)', width=3),
             showlegend=False,
             hoverinfo='skip'
         ))
@@ -1375,28 +1337,24 @@ with col_map3d:
         z=top_zones_map[selected_metric],
         mode='markers+text',
         marker=dict(
-            size=12,
+            size=9,
             color=top_zones_map[selected_metric],
             colorscale=color_scheme,
             showscale=True,
             colorbar=dict(
-                title=dict(
-                    text=metric_choice,
-                    font=dict(color='#a8a8a8', size=10)
-                ),
-                tickfont=dict(color='#a8a8a8', size=10),
-                thickness=10,
-                len=0.7,
+                title=dict(text=metric_choice[:12], font=dict(color='#a8a8a8', size=9)),
+                tickfont=dict(color='#a8a8a8', size=8),
+                thickness=8,
+                len=0.6,
                 x=1.02
             ),
-            line=dict(color='white', width=1)
+            line=dict(color='white', width=0.5)
         ),
         text=top_zones_map['zone_name'],
         textposition='top center',
-        textfont=dict(size=8, color='#ffffff'),
+        textfont=dict(size=7, color='#ffffff'),
         hovertemplate='<b>%{text}</b><br>' +
-                     f'{metric_choice}: %{{z:.2f}}<br>' +
-                     'Coords: (%{y:.3f}, %{x:.3f})<extra></extra>'
+                     f'{metric_choice}: %{{z:.2f}}<extra></extra>'
     ))
     
     camera = dict(
@@ -1406,27 +1364,9 @@ with col_map3d:
     
     fig_3d.update_layout(
         scene=dict(
-            xaxis=dict(
-                title='', 
-                backgroundcolor="#0a0a0a", 
-                gridcolor='#2a2a2a',
-                showspikes=False,
-                tickfont=dict(color='#6b6b6b', size=10)
-            ),
-            yaxis=dict(
-                title='', 
-                backgroundcolor="#0a0a0a", 
-                gridcolor='#2a2a2a',
-                showspikes=False,
-                tickfont=dict(color='#6b6b6b', size=10)
-            ),
-            zaxis=dict(
-                title='', 
-                backgroundcolor="#0a0a0a", 
-                gridcolor='#2a2a2a',
-                showspikes=False,
-                tickfont=dict(color='#6b6b6b', size=10)
-            ),
+            xaxis=dict(title='', backgroundcolor="#0a0a0a", gridcolor='#252525', showspikes=False, tickfont=dict(color='#6b6b6b', size=8)),
+            yaxis=dict(title='', backgroundcolor="#0a0a0a", gridcolor='#252525', showspikes=False, tickfont=dict(color='#6b6b6b', size=8)),
+            zaxis=dict(title='', backgroundcolor="#0a0a0a", gridcolor='#252525', showspikes=False, tickfont=dict(color='#6b6b6b', size=8)),
             camera=camera,
             aspectmode='manual',
             aspectratio=dict(x=1, y=1, z=0.6),
@@ -1434,7 +1374,7 @@ with col_map3d:
         ),
         paper_bgcolor='rgba(0, 0, 0, 0)',
         font={'color': '#ffffff'},
-        height=500,
+        height=380,
         margin=dict(l=0, r=0, t=0, b=0),
         showlegend=False
     )
@@ -1452,7 +1392,7 @@ create_ml_visualization(df, zones_coords)
 
 # Footer
 st.markdown("""
-<div style="text-align: center; padding: 2rem 0; color: #6b6b6b; border-top: 1px solid #2a2a2a; margin-top: 3rem;">
+<div style="text-align: center; padding: 1rem 0; color: #6b6b6b; border-top: 1px solid #252525; margin-top: 1.5rem; font-size: 0.75rem;">
     <p>NYC Taxi Analytics Dashboard © 2024 | Powered by Streamlit & D3.js</p>
 </div>
 """, unsafe_allow_html=True)
