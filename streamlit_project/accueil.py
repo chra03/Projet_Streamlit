@@ -18,7 +18,7 @@ st.set_page_config(
     page_icon="🚕"
 )
 
-# ============= CUSTOM CSS - PROFESSIONAL DARK THEME (LIGHT VERSION) =============
+# ============= CUSTOM CSS - PROFESSIONAL DARK THEME =============
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
@@ -59,7 +59,38 @@ st.markdown("""
     /* Main Container - Reduced padding */
     .main .block-container {
         padding: 1.25rem 1.5rem 2rem;
+        padding-top: 0.5rem !important;
         max-width: none;
+    }
+    
+    /* Remove white space at top */
+    .stApp > header {
+        background-color: transparent !important;
+    }
+    
+    header[data-testid="stHeader"] {
+        background-color: #0a0a0a !important;
+        color: #0a0a0a !important;
+    }
+    
+    /* Hide Streamlit header bar */
+    #MainMenu {visibility: hidden;}
+    header {visibility: hidden;}
+    footer {visibility: hidden;}
+    
+    /* Remove top padding from main area */
+    .main > div:first-child {
+        padding-top: 0 !important;
+    }
+    
+    section[data-testid="stSidebar"] > div:first-child {
+        padding-top: 1rem !important;
+    }
+    
+    /* Fix any remaining top margin */
+    .block-container {
+        padding-top: 1rem !important;
+        margin-top: 0 !important;
     }
     
     /* Header Banner - More compact */
@@ -98,6 +129,94 @@ st.markdown("""
         color: var(--text-secondary);
         font-size: 0.8rem;
         font-weight: 400;
+    }
+    
+    /* Introduction Section */
+    .intro-section {
+        background: linear-gradient(135deg, #141414 0%, #1a1a1a 100%);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .intro-section::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 4px;
+        height: 100%;
+        background: linear-gradient(180deg, var(--accent-pink), var(--accent-blue), var(--accent-green));
+    }
+    
+    .intro-title {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: var(--accent-blue);
+        margin-bottom: 0.75rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .intro-content {
+        color: var(--text-secondary);
+        font-size: 0.85rem;
+        line-height: 1.6;
+    }
+    
+    .intro-content p {
+        margin-bottom: 0.5rem;
+    }
+    
+    .intro-highlight {
+        color: var(--accent-green);
+        font-weight: 600;
+    }
+    
+    .intro-link {
+        color: var(--accent-pink);
+        text-decoration: none;
+        font-weight: 500;
+        transition: all 0.2s ease;
+    }
+    
+    .intro-link:hover {
+        color: var(--accent-blue);
+        text-decoration: underline;
+    }
+    
+    .intro-authors {
+        margin-top: 1rem;
+        padding-top: 0.75rem;
+        border-top: 1px solid var(--border-color);
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        flex-wrap: wrap;
+    }
+    
+    .author-badge {
+        background: rgba(139, 92, 246, 0.15);
+        border: 1px solid var(--accent-purple);
+        border-radius: 20px;
+        padding: 0.35rem 0.85rem;
+        font-size: 0.75rem;
+        color: var(--accent-purple);
+        font-weight: 500;
+    }
+    
+    .discipline-badge {
+        background: rgba(255, 149, 0, 0.15);
+        border: 1px solid var(--accent-orange);
+        border-radius: 20px;
+        padding: 0.35rem 0.85rem;
+        font-size: 0.75rem;
+        color: var(--accent-orange);
+        font-weight: 500;
     }
     
     /* Sidebar Styling - More compact */
@@ -280,6 +399,258 @@ st.markdown("""
         color: var(--accent-purple);
         font-weight: 600;
     }
+    
+    /* Section Header for Expanders */
+    .section-header {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        font-size: 1rem;
+        font-weight: 600;
+    }
+    
+    .section-icon {
+        font-size: 1.2rem;
+    }
+    
+    .section-badge {
+        font-size: 0.6rem;
+        padding: 0.2rem 0.6rem;
+        border-radius: 12px;
+        font-weight: 600;
+        margin-left: auto;
+    }
+    
+    .badge-live {
+        background: rgba(0, 255, 136, 0.15);
+        color: var(--accent-green);
+    }
+    
+    .badge-interactive {
+        background: rgba(0, 212, 255, 0.15);
+        color: var(--accent-blue);
+    }
+    
+    .badge-analytics {
+        background: rgba(255, 149, 0, 0.15);
+        color: var(--accent-orange);
+    }
+    
+    .badge-3d {
+        background: rgba(139, 92, 246, 0.15);
+        color: var(--accent-purple);
+    }
+    
+    .badge-ml {
+        background: rgba(255, 0, 110, 0.15);
+        color: var(--accent-pink);
+    }
+    
+    /* Streamlit Expander Styling - Enhanced */
+    .streamlit-expanderHeader {
+        background: var(--bg-secondary) !important;
+        border: 1px solid var(--border-color) !important;
+        border-radius: 12px !important;
+        padding: 1rem 1.25rem !important;
+        font-size: 1rem !important;
+        font-weight: 600 !important;
+        color: var(--text-primary) !important;
+        transition: all 0.3s ease !important;
+    }
+    
+    .streamlit-expanderHeader:hover {
+        border-color: var(--accent-pink) !important;
+        box-shadow: 0 4px 12px rgba(255, 0, 110, 0.1) !important;
+    }
+    
+    .streamlit-expanderContent {
+        background: var(--bg-secondary) !important;
+        border: 1px solid var(--border-color) !important;
+        border-top: none !important;
+        border-radius: 0 0 12px 12px !important;
+        padding: 1.25rem !important;
+    }
+    
+    div[data-testid="stExpander"] {
+        background: transparent !important;
+        border: none !important;
+        margin-bottom: 1rem;
+    }
+    
+    div[data-testid="stExpander"] details {
+        background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--bg-tertiary) 100%) !important;
+        border: 1px solid var(--border-color) !important;
+        border-radius: 12px !important;
+        overflow: hidden;
+        transition: all 0.3s ease !important;
+    }
+    
+    div[data-testid="stExpander"] details:hover {
+        border-color: var(--accent-pink) !important;
+        box-shadow: 0 6px 20px rgba(255, 0, 110, 0.15) !important;
+        transform: translateY(-2px);
+    }
+    
+    div[data-testid="stExpander"] details summary {
+        padding: 1rem 1.25rem !important;
+        background: transparent !important;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    }
+    
+    div[data-testid="stExpander"] details[open] summary {
+        border-bottom: 1px solid var(--border-color) !important;
+        background: rgba(255, 0, 110, 0.03) !important;
+        padding: 1.5rem 1.5rem !important;
+    }
+    
+    div[data-testid="stExpander"] details > div {
+        padding: 1.25rem !important;
+    }
+    
+    /* ============= SECTION TITLE STYLING ============= */
+    
+    /* Default state - Compact */
+    .section-title-container {
+        display: flex;
+        align-items: center;
+        gap: 0.85rem;
+        padding: 0.25rem 0;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    
+    .section-icon {
+        width: 38px;
+        height: 38px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.1rem;
+        flex-shrink: 0;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    
+    .section-icon-network { background: linear-gradient(135deg, rgba(255, 0, 110, 0.2), rgba(255, 0, 110, 0.05)); border: 1px solid rgba(255, 0, 110, 0.3); }
+    .section-icon-sankey { background: linear-gradient(135deg, rgba(0, 212, 255, 0.2), rgba(0, 212, 255, 0.05)); border: 1px solid rgba(0, 212, 255, 0.3); }
+    .section-icon-economic { background: linear-gradient(135deg, rgba(255, 149, 0, 0.2), rgba(255, 149, 0, 0.05)); border: 1px solid rgba(255, 149, 0, 0.3); }
+    .section-icon-map3d { background: linear-gradient(135deg, rgba(139, 92, 246, 0.2), rgba(139, 92, 246, 0.05)); border: 1px solid rgba(139, 92, 246, 0.3); }
+    .section-icon-ml { background: linear-gradient(135deg, rgba(0, 255, 136, 0.2), rgba(0, 255, 136, 0.05)); border: 1px solid rgba(0, 255, 136, 0.3); }
+    
+    .section-title-text {
+        flex: 1;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    
+    .section-main-title {
+        font-size: 0.95rem;
+        font-weight: 600;
+        margin: 0;
+        letter-spacing: -0.01em;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    
+    .section-main-title-network { background: linear-gradient(135deg, #ff006e, #ff4d94); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    .section-main-title-sankey { background: linear-gradient(135deg, #00d4ff, #00a3cc); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    .section-main-title-economic { background: linear-gradient(135deg, #ff9500, #ffb347); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    .section-main-title-map3d { background: linear-gradient(135deg, #8b5cf6, #a78bfa); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    .section-main-title-ml { background: linear-gradient(135deg, #00ff88, #00cc6a); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    
+    .section-subtitle {
+        font-size: 0rem;
+        color: var(--text-tertiary);
+        margin: 0;
+        font-weight: 400;
+        opacity: 0;
+        max-height: 0;
+        overflow: hidden;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    
+    .section-badge {
+        font-size: 0.55rem;
+        padding: 0.25rem 0.6rem;
+        border-radius: 20px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        flex-shrink: 0;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    
+    .badge-live { 
+        background: linear-gradient(135deg, rgba(0, 255, 136, 0.2), rgba(0, 255, 136, 0.1)); 
+        color: #00ff88; 
+        border: 1px solid rgba(0, 255, 136, 0.3);
+    }
+    
+    .badge-interactive { 
+        background: linear-gradient(135deg, rgba(0, 212, 255, 0.2), rgba(0, 212, 255, 0.1)); 
+        color: #00d4ff; 
+        border: 1px solid rgba(0, 212, 255, 0.3);
+    }
+    
+    .badge-analytics { 
+        background: linear-gradient(135deg, rgba(255, 149, 0, 0.2), rgba(255, 149, 0, 0.1)); 
+        color: #ff9500; 
+        border: 1px solid rgba(255, 149, 0, 0.3);
+    }
+    
+    .badge-3d { 
+        background: linear-gradient(135deg, rgba(139, 92, 246, 0.2), rgba(139, 92, 246, 0.1)); 
+        color: #8b5cf6; 
+        border: 1px solid rgba(139, 92, 246, 0.3);
+    }
+    
+    .badge-ml { 
+        background: linear-gradient(135deg, rgba(255, 0, 110, 0.2), rgba(255, 0, 110, 0.1)); 
+        color: #ff006e; 
+        border: 1px solid rgba(255, 0, 110, 0.3);
+    }
+    
+    /* ============= OPEN STATE - EXPANDED/LARGE ============= */
+    div[data-testid="stExpander"] details[open] .section-title-container {
+        gap: 1.1rem;
+        padding: 0.5rem 0;
+    }
+    
+    div[data-testid="stExpander"] details[open] .section-icon {
+        width: 52px;
+        height: 52px;
+        font-size: 1.5rem;
+        border-radius: 14px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+    }
+    
+    div[data-testid="stExpander"] details[open] .section-main-title {
+        font-size: 1.4rem;
+        font-weight: 700;
+        letter-spacing: -0.02em;
+    }
+    
+    div[data-testid="stExpander"] details[open] .section-subtitle {
+        font-size: 0.8rem;
+        opacity: 1;
+        max-height: 30px;
+        margin-top: 0.3rem;
+    }
+    
+    div[data-testid="stExpander"] details[open] .section-badge {
+        font-size: 0.65rem;
+        padding: 0.35rem 0.85rem;
+        animation: pulse-badge 2s infinite;
+    }
+    
+    @keyframes pulse-badge {
+        0%, 100% { box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.2); }
+        50% { box-shadow: 0 0 0 6px rgba(255, 255, 255, 0); }
+    }
+    
+    /* Specific glow effects when open */
+    div[data-testid="stExpander"] details[open] .section-icon-network { box-shadow: 0 4px 20px rgba(255, 0, 110, 0.4); }
+    div[data-testid="stExpander"] details[open] .section-icon-sankey { box-shadow: 0 4px 20px rgba(0, 212, 255, 0.4); }
+    div[data-testid="stExpander"] details[open] .section-icon-economic { box-shadow: 0 4px 20px rgba(255, 149, 0, 0.4); }
+    div[data-testid="stExpander"] details[open] .section-icon-map3d { box-shadow: 0 4px 20px rgba(139, 92, 246, 0.4); }
+    div[data-testid="stExpander"] details[open] .section-icon-ml { box-shadow: 0 4px 20px rgba(0, 255, 136, 0.4); }
     
     /* Buttons - Slim */
     .stButton > button {
@@ -511,8 +882,39 @@ st.markdown("""
 # ============= HEADER BANNER =============
 st.markdown("""
 <div class="header-banner">
-    <h1 class="header-title">NYC Taxi Analytics Dashboard</h1>
+    <h1 class="header-title">🚕 NYC Taxi Analytics Dashboard</h1>
     <p class="header-subtitle">Analyse en temps réel des flux de taxis et patterns de déplacement à New York City</p>
+</div>
+""", unsafe_allow_html=True)
+
+# ============= INTRODUCTION SECTION =============
+st.markdown("""
+<div class="intro-section">
+    <div class="intro-title">
+         À Propos de ce Projet
+    </div>
+    <div class="intro-content">
+        <p>
+            Ce dashboard interactif vise à <span class="intro-highlight">étudier les trajectoires des taxis à New York City</span>. 
+            L'analyse se base sur un échantillon de <span class="intro-highlight">200 000 trajectoires aléatoires</span> 
+            extraites des données officielles de la NYC Taxi & Limousine Commission.
+        </p>
+        <p>
+             <strong>Source des données :</strong> 
+            <a href="https://www.nyc.gov/site/tlc/about/data.page" target="_blank" class="intro-link">
+                NYC TLC Trip Record Data
+            </a>
+        </p>
+        <p>
+            L'objectif est d'analyser les patterns de déplacement, identifier les zones les plus actives, 
+            comprendre les dynamiques économiques et utiliser le Machine Learning pour prédire les comportements.
+        </p>
+        <div class="intro-authors">
+            <span class="author-badge"> Anas JEBALI</span>
+            <span class="author-badge"> Rania CHIRANE</span>
+            <span class="discipline-badge"> Open Data et Web des Données</span>
+        </div>
+    </div>
 </div>
 """, unsafe_allow_html=True)
 
@@ -616,7 +1018,7 @@ with st.sidebar:
     )
     st.markdown('</div>', unsafe_allow_html=True)
     
-    if st.button(" Réinitialiser", use_container_width=True):
+    if st.button("🔄 Réinitialiser", use_container_width=True):
         st.rerun()
 
 # ============= FILTER DATA =============
@@ -698,16 +1100,8 @@ with col4:
     """, unsafe_allow_html=True)
 
 st.markdown('</div>', unsafe_allow_html=True)
-st.markdown('<div class="section-divider"></div>', unsafe_allow_html=True)
 
-# ============= NETWORK VISUALIZATION =============
-st.markdown("""
-<div class="chart-header">
-    <h2 class="chart-title"> Visualisation du Réseau de Taxis</h2>
-    <span class="chart-badge">LIVE</span>
-</div>
-""", unsafe_allow_html=True)
-
+# ============= PREPARE DATA FOR VISUALIZATIONS =============
 depart_borough = selected_depart_borough if selected_depart_borough != '-- Tous --' else None
 arrivee_borough = selected_arrivee_borough if selected_arrivee_borough != '-- Tous --' else None
 
@@ -783,616 +1177,532 @@ graph_data = {
     'edges': edges
 }
 
-col_graph, col_guide = st.columns([4, 1], gap="medium")
+# ============= SECTION 1: NETWORK VISUALIZATION (EXPANDABLE) =============
+with st.expander(" Visualisation du Réseau de Taxis", expanded=True):
+    st.markdown("""
+    <div class="section-title-container">
+        <div class="section-icon section-icon-network">🕸️</div>
+        <div class="section-title-text">
+            <p class="section-main-title section-main-title-network">Visualisation du Réseau de Taxis</p>
+            <p class="section-subtitle">Graphe interactif des connexions entre zones NYC</p>
+        </div>
+        <span class="section-badge badge-live">● LIVE</span>
+    </div>
+    """, unsafe_allow_html=True)
+    col_graph, col_guide = st.columns([4, 1], gap="medium")
 
-with col_graph:
-    st.markdown('<div class="chart-container">', unsafe_allow_html=True)
-    
-    d3_nodes = [{'id': node['id'], 'label': node['label'], 'color': node['color'], 
-                  'size': node['size'], 'borough': node['attributes']['borough']} 
-                 for node in graph_data['nodes']]
-    d3_links = [{'source': edge['source'], 'target': edge['target'], 'value': edge['size'], 
-                  'color': edge['color'], 'label': edge['label']} 
-                 for edge in graph_data['edges']]
+    with col_graph:
+        st.markdown('<div class="chart-container">', unsafe_allow_html=True)
+        
+        d3_nodes = [{'id': node['id'], 'label': node['label'], 'color': node['color'], 
+                      'size': node['size'], 'borough': node['attributes']['borough']} 
+                     for node in graph_data['nodes']]
+        d3_links = [{'source': edge['source'], 'target': edge['target'], 'value': edge['size'], 
+                      'color': edge['color'], 'label': edge['label']} 
+                     for edge in graph_data['edges']]
 
-    d3_data = {'nodes': d3_nodes, 'links': d3_links}
+        d3_data = {'nodes': d3_nodes, 'links': d3_links}
 
-    html_code = f"""
-    <!DOCTYPE html>
-    <html>
-    <head>
-        <meta charset="utf-8" />
-        <title>Network Visualization</title>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
-        <style>
-            body {{
-                margin: 0;
-                padding: 0;
-                font-family: 'Inter', -apple-system, sans-serif;
-                background-color: #141414;
-            }}
-            #graph {{
-                width: 100%;
-                height: 380px;
-                background: radial-gradient(circle at center, #1a1a1a 0%, #0a0a0a 100%);
-                border-radius: 10px;
-                position: relative;
-            }}
-            .node {{
-                stroke: white;
-                stroke-width: 1.5px;
-                cursor: pointer;
-                filter: drop-shadow(0 0 3px rgba(255, 255, 255, 0.1));
-                transition: all 0.25s ease;
-            }}
-            .node:hover {{
-                stroke: #00d4ff;
-                stroke-width: 2px;
-                filter: drop-shadow(0 0 8px rgba(0, 212, 255, 0.5));
-            }}
-            .node.highlighted {{
-                stroke: #ff006e;
-                stroke-width: 2px;
-                filter: drop-shadow(0 0 10px rgba(255, 0, 110, 0.7));
-            }}
-            .link {{
-                stroke-opacity: 0.5;
-                pointer-events: none;
-            }}
-            .link.highlighted {{
-                stroke: #ff9500;
-                stroke-width: 2px;
-                stroke-opacity: 1;
-                filter: drop-shadow(0 0 6px rgba(255, 149, 0, 0.4));
-            }}
-            .label {{
-                font-size: 9px;
-                font-weight: 600;
-                text-anchor: middle;
-                pointer-events: none;
-                user-select: none;
-                fill: #ffffff;
-                text-shadow: 0 0 3px rgba(0, 0, 0, 0.8);
-            }}
-            .tooltip {{
-                position: absolute;
-                padding: 8px 12px;
-                background: rgba(20, 20, 20, 0.95);
-                color: #ffffff;
-                border: 1px solid #ff006e;
-                border-radius: 8px;
-                font-size: 11px;
-                font-weight: 500;
-                pointer-events: none;
-                display: none;
-                z-index: 1000;
-                box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
-            }}
-            .tooltip strong {{
-                color: #00d4ff;
-                font-weight: 700;
-            }}
-        </style>
-    </head>
-    <body>
-        <div id="graph"></div>
-        <div class="tooltip" id="tooltip"></div>
-        <script>
-            const data = {json.dumps(d3_data)};
-            
-            const width = document.getElementById('graph').clientWidth;
-            const height = 380;
-            
-            const svg = d3.select('#graph')
-                .append('svg')
-                .attr('width', width)
-                .attr('height', height);
-            
-            const g = svg.append('g');
-            
-            const simulation = d3.forceSimulation(data.nodes)
-                .force('link', d3.forceLink(data.links)
-                    .id(d => d.id)
-                    .distance(80)
-                    .strength(0.5))
-                .force('charge', d3.forceManyBody()
-                    .strength(-350)
-                    .distanceMax(400))
-                .force('center', d3.forceCenter(width / 2, height / 2))
-                .force('collision', d3.forceCollide().radius(d => d.size + 8));
-            
-            const zoom = d3.zoom()
-                .scaleExtent([0.3, 8])
-                .on('zoom', (event) => {{
-                    g.attr('transform', event.transform);
-                }});
-            
-            svg.call(zoom);
-            
-            const link = g.selectAll('.link')
-                .data(data.links)
-                .enter()
-                .append('line')
-                .attr('class', 'link')
-                .attr('stroke', d => d.color)
-                .attr('stroke-width', d => d.value)
-                .attr('opacity', 0.5);
-            
-            const node = g.selectAll('.node')
-                .data(data.nodes)
-                .enter()
-                .append('circle')
-                .attr('class', 'node')
-                .attr('r', d => d.size)
-                .attr('fill', d => d.color)
-                .call(d3.drag()
-                    .on('start', dragstarted)
-                    .on('drag', dragged)
-                    .on('end', dragended))
-                .on('mouseover', (event, d) => {{
-                    node.classed('highlighted', n => n.id === d.id);
-                    link.classed('highlighted', l => l.source.id === d.id || l.target.id === d.id);
+        html_code = f"""
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset="utf-8" />
+            <title>Network Visualization</title>
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+            <style>
+                body {{
+                    margin: 0;
+                    padding: 0;
+                    font-family: 'Inter', -apple-system, sans-serif;
+                    background-color: #141414;
+                }}
+                #graph {{
+                    width: 100%;
+                    height: 380px;
+                    background: radial-gradient(circle at center, #1a1a1a 0%, #0a0a0a 100%);
+                    border-radius: 10px;
+                    position: relative;
+                }}
+                .node {{
+                    stroke: white;
+                    stroke-width: 1.5px;
+                    cursor: pointer;
+                    filter: drop-shadow(0 0 3px rgba(255, 255, 255, 0.1));
+                    transition: all 0.25s ease;
+                }}
+                .node:hover {{
+                    stroke: #00d4ff;
+                    stroke-width: 2px;
+                    filter: drop-shadow(0 0 8px rgba(0, 212, 255, 0.5));
+                }}
+                .node.highlighted {{
+                    stroke: #ff006e;
+                    stroke-width: 2px;
+                    filter: drop-shadow(0 0 10px rgba(255, 0, 110, 0.7));
+                }}
+                .link {{
+                    stroke-opacity: 0.5;
+                    pointer-events: none;
+                }}
+                .link.highlighted {{
+                    stroke: #ff9500;
+                    stroke-width: 2px;
+                    stroke-opacity: 1;
+                    filter: drop-shadow(0 0 6px rgba(255, 149, 0, 0.4));
+                }}
+                .label {{
+                    font-size: 9px;
+                    font-weight: 600;
+                    text-anchor: middle;
+                    pointer-events: none;
+                    user-select: none;
+                    fill: #ffffff;
+                    text-shadow: 0 0 3px rgba(0, 0, 0, 0.8);
+                }}
+                .tooltip {{
+                    position: absolute;
+                    padding: 8px 12px;
+                    background: rgba(20, 20, 20, 0.95);
+                    color: #ffffff;
+                    border: 1px solid #ff006e;
+                    border-radius: 8px;
+                    font-size: 11px;
+                    font-weight: 500;
+                    pointer-events: none;
+                    display: none;
+                    z-index: 1000;
+                    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+                }}
+                .tooltip strong {{
+                    color: #00d4ff;
+                    font-weight: 700;
+                }}
+            </style>
+        </head>
+        <body>
+            <div id="graph"></div>
+            <div class="tooltip" id="tooltip"></div>
+            <script>
+                const data = {json.dumps(d3_data)};
+                
+                const width = document.getElementById('graph').clientWidth;
+                const height = 380;
+                
+                const svg = d3.select('#graph')
+                    .append('svg')
+                    .attr('width', width)
+                    .attr('height', height);
+                
+                const g = svg.append('g');
+                
+                const simulation = d3.forceSimulation(data.nodes)
+                    .force('link', d3.forceLink(data.links)
+                        .id(d => d.id)
+                        .distance(80)
+                        .strength(0.5))
+                    .force('charge', d3.forceManyBody()
+                        .strength(-350)
+                        .distanceMax(400))
+                    .force('center', d3.forceCenter(width / 2, height / 2))
+                    .force('collision', d3.forceCollide().radius(d => d.size + 8));
+                
+                const zoom = d3.zoom()
+                    .scaleExtent([0.3, 8])
+                    .on('zoom', (event) => {{
+                        g.attr('transform', event.transform);
+                    }});
+                
+                svg.call(zoom);
+                
+                const link = g.selectAll('.link')
+                    .data(data.links)
+                    .enter()
+                    .append('line')
+                    .attr('class', 'link')
+                    .attr('stroke', d => d.color)
+                    .attr('stroke-width', d => d.value)
+                    .attr('opacity', 0.5);
+                
+                const node = g.selectAll('.node')
+                    .data(data.nodes)
+                    .enter()
+                    .append('circle')
+                    .attr('class', 'node')
+                    .attr('r', d => d.size)
+                    .attr('fill', d => d.color)
+                    .call(d3.drag()
+                        .on('start', dragstarted)
+                        .on('drag', dragged)
+                        .on('end', dragended))
+                    .on('mouseover', (event, d) => {{
+                        node.classed('highlighted', n => n.id === d.id);
+                        link.classed('highlighted', l => l.source.id === d.id || l.target.id === d.id);
+                        
+                        const tooltip = d3.select('#tooltip');
+                        tooltip.style('display', 'block')
+                            .html(`<strong>${{d.label}}</strong><br>📍 ${{d.borough}}<br>🔗 ${{d.size.toFixed(0)}} conn.`)
+                            .style('left', (event.pageX + 8) + 'px')
+                            .style('top', (event.pageY - 20) + 'px');
+                    }})
+                    .on('mouseout', () => {{
+                        node.classed('highlighted', false);
+                        link.classed('highlighted', false);
+                        d3.select('#tooltip').style('display', 'none');
+                    }});
+                
+                const labels = g.selectAll('.label')
+                    .data(data.nodes)
+                    .enter()
+                    .append('text')
+                    .attr('class', 'label')
+                    .attr('dy', -10)
+                    .text(d => d.label.length > 15 ? d.label.substring(0, 15) + '...' : d.label);
+                
+                simulation.on('tick', () => {{
+                    link
+                        .attr('x1', d => d.source.x)
+                        .attr('y1', d => d.source.y)
+                        .attr('x2', d => d.target.x)
+                        .attr('y2', d => d.target.y);
                     
-                    const tooltip = d3.select('#tooltip');
-                    tooltip.style('display', 'block')
-                        .html(`<strong>${{d.label}}</strong><br>📍 ${{d.borough}}<br>🔗 ${{d.size.toFixed(0)}} conn.`)
-                        .style('left', (event.pageX + 8) + 'px')
-                        .style('top', (event.pageY - 20) + 'px');
-                }})
-                .on('mouseout', () => {{
-                    node.classed('highlighted', false);
-                    link.classed('highlighted', false);
-                    d3.select('#tooltip').style('display', 'none');
+                    node
+                        .attr('cx', d => d.x)
+                        .attr('cy', d => d.y);
+                    
+                    labels
+                        .attr('x', d => d.x)
+                        .attr('y', d => d.y);
                 }});
-            
-            const labels = g.selectAll('.label')
-                .data(data.nodes)
-                .enter()
-                .append('text')
-                .attr('class', 'label')
-                .attr('dy', -10)
-                .text(d => d.label.length > 15 ? d.label.substring(0, 15) + '...' : d.label);
-            
-            simulation.on('tick', () => {{
-                link
-                    .attr('x1', d => d.source.x)
-                    .attr('y1', d => d.source.y)
-                    .attr('x2', d => d.target.x)
-                    .attr('y2', d => d.target.y);
                 
-                node
-                    .attr('cx', d => d.x)
-                    .attr('cy', d => d.y);
+                function dragstarted(event, d) {{
+                    if (!event.active) simulation.alphaTarget(0.3).restart();
+                    d.fx = d.x;
+                    d.fy = d.y;
+                }}
                 
-                labels
-                    .attr('x', d => d.x)
-                    .attr('y', d => d.y);
-            }});
-            
-            function dragstarted(event, d) {{
-                if (!event.active) simulation.alphaTarget(0.3).restart();
-                d.fx = d.x;
-                d.fy = d.y;
-            }}
-            
-            function dragged(event, d) {{
-                d.fx = event.x;
-                d.fy = event.y;
-            }}
-            
-            function dragended(event, d) {{
-                if (!event.active) simulation.alphaTarget(0);
-            }}
-        </script>
-    </body>
-    </html>
-    """
+                function dragged(event, d) {{
+                    d.fx = event.x;
+                    d.fy = event.y;
+                }}
+                
+                function dragended(event, d) {{
+                    if (!event.active) simulation.alphaTarget(0);
+                }}
+            </script>
+        </body>
+        </html>
+        """
 
-    st.components.v1.html(html_code, height=400, scrolling=False)
-    st.markdown('</div>', unsafe_allow_html=True)
+        st.components.v1.html(html_code, height=400, scrolling=False)
+        st.markdown('</div>', unsafe_allow_html=True)
 
-with col_guide:
+    with col_guide:
+        st.markdown("""
+        <div class="guide-box">
+            <h4>Légende</h4>
+            <p>🔴 : Zones standards</p>
+            <p>🟢 : Départ</p>
+            <p>🔵 : Arrivée</p>
+            <p>🟣 : Violet: Mixte</p>
+            <p>🟠 : Flux filtrés</p>
+        </div>
+        """, unsafe_allow_html=True)
+
+# ============= SECTION 3: ECONOMIC ANALYSIS (EXPANDABLE) =============
+with st.expander(" Analyse Économique Spatio-Temporelle", expanded=False):
     st.markdown("""
-    <div class="guide-box">
-        <h4>Légende</h4>
-        <p>🔴 : Zones standards</p>
-        <p>🟢 : Départ</p>
-        <p>🔵 : Arrivée</p>
-        <p>🟣 : Violet: Mixte</p>
-        <p style="margin-top: 0.5rem;"><strong>Interactions:</strong></p>
-        <p> Glisser /  Zoom</p>
-        <p>🟠: Flux filtrés</p>
+    <div class="section-title-container">
+        <div class="section-icon section-icon-economic">💹</div>
+        <div class="section-title-text">
+            <p class="section-main-title section-main-title-economic">Analyse Économique Spatio-Temporelle</p>
+            <p class="section-subtitle">Revenus, patterns horaires et zones les plus rentables</p>
+        </div>
+        <span class="section-badge badge-analytics">ANALYTICS</span>
     </div>
     """, unsafe_allow_html=True)
+    df['hour'] = pd.to_datetime(df['tpep_pickup_datetime']).dt.hour
+    df['day_of_week'] = pd.to_datetime(df['tpep_pickup_datetime']).dt.dayofweek
+    df['revenue_per_km'] = df['total_amount'] / (df['trip_distance'] + 0.01)
 
-st.markdown('<div class="section-divider"></div>', unsafe_allow_html=True)
+    days_map = {0: 'Lun', 1: 'Mar', 2: 'Mer', 3: 'Jeu', 4: 'Ven', 5: 'Sam', 6: 'Dim'}
+    df['day_name'] = df['day_of_week'].map(days_map)
 
-# ============= SANKEY DIAGRAM =============
-st.markdown("""
-<div class="chart-header">
-    <h2 class="chart-title"> Analyse des Flux - Diagramme Sankey</h2>
-    <span class="chart-badge">INTERACTIVE</span>
-</div>
-""", unsafe_allow_html=True)
+    col_eco1, col_eco2, col_eco3 = st.columns(3, gap="small")
 
-col_sankey, col_sankey_stats = st.columns([4, 1], gap="medium")
-
-with col_sankey:
-    st.markdown('<div class="chart-container">', unsafe_allow_html=True)
-    
-    top_flows_sankey = flows.nlargest(sankey_top_flows, 'trips').copy()
-    
-    sources = []
-    targets = []
-    values = []
-    link_colors = []
-    
-    unique_zones = list(set(top_flows_sankey['PULocationID'].tolist() + top_flows_sankey['DOLocationID'].tolist()))
-    zone_to_index = {zone: i for i, zone in enumerate(unique_zones)}
-    
-    node_labels = []
-    node_colors = []
-    for zone in unique_zones:
-        zone_name = zones_coords.get(zone, {}).get('name', f'Zone {zone}')
-        zone_borough = zones_coords.get(zone, {}).get('borough', 'Unknown')
-        node_labels.append(f"{zone_name[:18]}")
+    # Hourly Revenue Chart
+    with col_eco1:
+        st.markdown('<div class="chart-container">', unsafe_allow_html=True)
         
-        if depart_borough and zone_borough == depart_borough:
-            node_colors.append('#00ff88')
-        elif arrivee_borough and zone_borough == arrivee_borough:
-            node_colors.append('#00d4ff')
-        else:
-            node_colors.append('#ff006e')
-    
-    for _, row in top_flows_sankey.iterrows():
-        sources.append(zone_to_index[row['PULocationID']])
-        targets.append(zone_to_index[row['DOLocationID']])
-        values.append(row['trips'])
+        hourly_stats = df.groupby('hour').agg({
+            'total_amount': 'mean',
+            'trip_distance': 'mean',
+            'revenue_per_km': 'mean'
+        }).reset_index()
         
-        pu_borough = zones_coords[row['PULocationID']]['borough']
-        do_borough = zones_coords[row['DOLocationID']]['borough']
+        fig_hourly = go.Figure()
         
-        if depart_borough and arrivee_borough:
-            if pu_borough == depart_borough and do_borough == arrivee_borough:
-                link_colors.append('rgba(255, 149, 0, 0.5)')
-            else:
-                link_colors.append('rgba(74, 74, 74, 0.25)')
-        elif depart_borough and pu_borough == depart_borough:
-            link_colors.append('rgba(0, 255, 136, 0.4)')
-        elif arrivee_borough and do_borough == arrivee_borough:
-            link_colors.append('rgba(0, 212, 255, 0.4)')
-        else:
-            link_colors.append('rgba(255, 0, 110, 0.35)')
-    
-    fig = go.Figure(data=[go.Sankey(
-        node=dict(
-            pad=15,
-            thickness=18,
-            line=dict(color="rgba(255, 255, 255, 0.08)", width=0.5),
-            label=node_labels,
-            color=node_colors,
-            hovertemplate='<b>%{label}</b><br>Total: %{value:,.0f} trajets<extra></extra>'
-        ),
-        link=dict(
-            source=sources,
-            target=targets,
-            value=values,
-            color=link_colors,
-            hovertemplate='%{source.label} → %{target.label}<br><b>%{value:,.0f}</b> trajets<extra></extra>'
-        )
-    )])
-    
-    fig.update_layout(
-        font={'size': 10, 'color': '#ffffff', 'family': 'Inter'},
-        paper_bgcolor='rgba(0, 0, 0, 0)',
-        plot_bgcolor='rgba(0, 0, 0, 0)',
-        height=420,
-        margin=dict(l=0, r=0, t=10, b=10)
-    )
-    
-    st.plotly_chart(fig, use_container_width=True)
-    st.markdown('</div>', unsafe_allow_html=True)
-
-with col_sankey_stats:
-    total_sankey_trips = top_flows_sankey['trips'].sum()
-    avg_sankey_trips = top_flows_sankey['trips'].mean()
-    max_flow = top_flows_sankey.nlargest(1, 'trips').iloc[0]
-    
-    st.markdown(f"""
-    <div class="guide-box">
-        <h4>Stats Flux</h4>
-        <p><strong>Total:</strong> {total_sankey_trips:,.0f}</p>
-        <p><strong>Moyenne:</strong> {avg_sankey_trips:.0f}</p>
-        <p><strong>Routes:</strong> {len(top_flows_sankey)}</p>
-        <p style="margin-top: 0.5rem;"><strong> Top:</strong></p>
-        <p>{zones_coords[max_flow['PULocationID']]['name'][:15]}</p>
-        <p>→ {zones_coords[max_flow['DOLocationID']]['name'][:15]}</p>
-        <p><strong>{max_flow['trips']:,.0f}</strong> trajets</p>
-    </div>
-    """, unsafe_allow_html=True)
-
-st.markdown('<div class="section-divider"></div>', unsafe_allow_html=True)
-
-# ============= ECONOMIC ANALYSIS =============
-st.markdown("""
-<div class="chart-header">
-    <h2 class="chart-title"> Analyse Économique Spatio-Temporelle</h2>
-    <span class="chart-badge">ANALYTICS</span>
-</div>
-""", unsafe_allow_html=True)
-
-df['hour'] = pd.to_datetime(df['tpep_pickup_datetime']).dt.hour
-df['day_of_week'] = pd.to_datetime(df['tpep_pickup_datetime']).dt.dayofweek
-df['revenue_per_km'] = df['total_amount'] / (df['trip_distance'] + 0.01)
-
-days_map = {0: 'Lun', 1: 'Mar', 2: 'Mer', 3: 'Jeu', 4: 'Ven', 5: 'Sam', 6: 'Dim'}
-df['day_name'] = df['day_of_week'].map(days_map)
-
-col_eco1, col_eco2, col_eco3 = st.columns(3, gap="small")
-
-# Hourly Revenue Chart
-with col_eco1:
-    st.markdown('<div class="chart-container">', unsafe_allow_html=True)
-    
-    hourly_stats = df.groupby('hour').agg({
-        'total_amount': 'mean',
-        'trip_distance': 'mean',
-        'revenue_per_km': 'mean'
-    }).reset_index()
-    
-    fig_hourly = go.Figure()
-    
-    fig_hourly.add_trace(go.Scatter(
-        x=hourly_stats['hour'],
-        y=hourly_stats['total_amount'],
-        mode='lines+markers',
-        name='Revenu moyen',
-        line=dict(color='#ff006e', width=2),
-        marker=dict(size=5, color='#ff006e'),
-        fill='tozeroy',
-        fillcolor='rgba(255, 0, 110, 0.08)'
-    ))
-    
-    fig_hourly.update_layout(
-        title={'text': ' Rentabilité Horaire', 'font': {'size': 12, 'color': '#ffffff'}},
-        xaxis={'title': '', 'color': '#a8a8a8', 'gridcolor': '#252525', 'zerolinecolor': '#252525', 'tickfont': {'size': 9}},
-        yaxis={'title': '', 'color': '#a8a8a8', 'gridcolor': '#252525', 'zerolinecolor': '#252525', 'tickfont': {'size': 9}},
-        paper_bgcolor='rgba(0, 0, 0, 0)',
-        plot_bgcolor='rgba(0, 0, 0, 0)',
-        font={'color': '#ffffff'},
-        height=260,
-        showlegend=False,
-        hovermode='x unified',
-        margin=dict(l=30, r=10, t=35, b=25)
-    )
-    
-    st.plotly_chart(fig_hourly, use_container_width=True)
-    st.markdown('</div>', unsafe_allow_html=True)
-
-# Heatmap
-with col_eco2:
-    st.markdown('<div class="chart-container">', unsafe_allow_html=True)
-    
-    heatmap_data = df.groupby(['day_of_week', 'hour'])['total_amount'].mean().reset_index()
-    heatmap_pivot = heatmap_data.pivot(index='day_of_week', columns='hour', values='total_amount')
-    
-    fig_heatmap = go.Figure(data=go.Heatmap(
-        z=heatmap_pivot.values,
-        x=[f'{h}h' for h in range(24)],
-        y=['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'],
-        colorscale=[
-            [0, '#0a0a0a'],
-            [0.25, '#ff006e'],
-            [0.5, '#ff9500'],
-            [0.75, '#00d4ff'],
-            [1, '#00ff88']
-        ],
-        colorbar=dict(
-            title=dict(text='$/trajet', font=dict(color='#a8a8a8', size=9)),
-            tickfont=dict(color='#a8a8a8', size=8),
-            thickness=8,
-            len=0.5
-        ),
-        hovertemplate='%{y} %{x}<br>$%{z:.2f}<extra></extra>'
-    ))
-    
-    fig_heatmap.update_layout(
-        title={'text': ' Patterns Hebdo', 'font': {'size': 12, 'color': '#ffffff'}},
-        xaxis={'title': '', 'color': '#a8a8a8', 'tickfont': {'size': 8}},
-        yaxis={'title': '', 'color': '#a8a8a8', 'tickfont': {'size': 9}},
-        paper_bgcolor='rgba(0, 0, 0, 0)',
-        plot_bgcolor='rgba(0, 0, 0, 0)',
-        font={'color': '#ffffff'},
-        height=260,
-        margin=dict(l=35, r=10, t=35, b=25)
-    )
-    
-    st.plotly_chart(fig_heatmap, use_container_width=True)
-    st.markdown('</div>', unsafe_allow_html=True)
-
-# Top Zones
-with col_eco3:
-    st.markdown('<div class="chart-container">', unsafe_allow_html=True)
-    
-    zone_stats = df.groupby('PULocationID').agg({
-        'total_amount': ['sum', 'mean'],
-        'trip_distance': 'mean',
-        'passenger_count': 'count'
-    }).reset_index()
-    zone_stats.columns = ['zone_id', 'revenue_total', 'revenue_mean', 'distance_mean', 'trip_count']
-    zone_stats['efficiency'] = zone_stats['revenue_mean'] / (zone_stats['distance_mean'] + 0.01)
-    zone_stats['zone_name'] = zone_stats['zone_id'].apply(
-        lambda x: zones_coords.get(x, {}).get('name', f'Zone {x}')[:16]
-    )
-    
-    top_zones = zone_stats.nlargest(6, 'revenue_total')
-    
-    fig_zones = go.Figure(data=[
-        go.Bar(
-            x=top_zones['revenue_mean'],
-            y=top_zones['zone_name'],
-            orientation='h',
-            marker=dict(
-                color=top_zones['efficiency'],
-                colorscale=[[0, '#ff006e'], [0.5, '#ff9500'], [1, '#00ff88']],
-                showscale=False
-            ),
-            text=[f'${x:.0f}' for x in top_zones['revenue_mean']],
-            textposition='outside',
-            textfont=dict(color='#ffffff', size=9),
-            hovertemplate='<b>%{y}</b><br>$%{x:.2f}/trajet<extra></extra>'
-        )
-    ])
-    
-    fig_zones.update_layout(
-        title={'text': ' Top Zones', 'font': {'size': 12, 'color': '#ffffff'}},
-        xaxis={'title': '', 'color': '#a8a8a8', 'gridcolor': '#252525', 'showticklabels': False},
-        yaxis={'title': '', 'color': '#ffffff', 'tickfont': {'size': 9}},
-        paper_bgcolor='rgba(0, 0, 0, 0)',
-        plot_bgcolor='rgba(0, 0, 0, 0)',
-        font={'color': '#ffffff'},
-        height=260,
-        margin=dict(l=90, r=35, t=35, b=25)
-    )
-    
-    st.plotly_chart(fig_zones, use_container_width=True)
-    st.markdown('</div>', unsafe_allow_html=True)
-
-st.markdown('<div class="section-divider"></div>', unsafe_allow_html=True)
-
-# ============= 3D MAP =============
-st.markdown("""
-<div class="chart-header">
-    <h2 class="chart-title"> Carte 3D Interactive</h2>
-    <span class="chart-badge">3D VIEW</span>
-</div>
-""", unsafe_allow_html=True)
-
-col_map3d, col_controls = st.columns([4, 1], gap="medium")
-
-with col_controls:
-    st.markdown("""
-    <div class="guide-box">
-        <h4>Contrôles 3D</h4>
-    """, unsafe_allow_html=True)
-    
-    metric_choice = st.selectbox(
-        "📊 Métrique",
-        ["Revenu Total", "Nombre de Trajets", "Distance Moyenne", "Efficacité ($/km)"],
-        label_visibility="collapsed"
-    )
-    
-    show_top_n = st.slider(" Top zones", 10, 50, 25)
-    
-    color_scheme = st.selectbox(
-        "🎨 Palette",
-        ["Plasma", "Viridis", "Turbo", "Hot"],
-        label_visibility="collapsed"
-    )
-    
-    st.markdown("</div>", unsafe_allow_html=True)
-
-with col_map3d:
-    st.markdown('<div class="chart-container">', unsafe_allow_html=True)
-    
-    zone_geo_stats = df.groupby('PULocationID').agg({
-        'total_amount': ['sum', 'mean'],
-        'trip_distance': 'mean',
-        'passenger_count': 'count'
-    }).reset_index()
-    zone_geo_stats.columns = ['zone_id', 'revenue_total', 'revenue_mean', 'distance_mean', 'trip_count']
-    zone_geo_stats['efficiency'] = zone_geo_stats['revenue_mean'] / (zone_geo_stats['distance_mean'] + 0.01)
-    
-    zone_geo_stats['lat'] = zone_geo_stats['zone_id'].apply(lambda x: zones_coords.get(x, {}).get('lat', 40.7))
-    zone_geo_stats['lon'] = zone_geo_stats['zone_id'].apply(lambda x: zones_coords.get(x, {}).get('lon', -74.0))
-    zone_geo_stats['zone_name'] = zone_geo_stats['zone_id'].apply(lambda x: zones_coords.get(x, {}).get('name', f'Zone {x}'))
-    zone_geo_stats['borough'] = zone_geo_stats['zone_id'].apply(lambda x: zones_coords.get(x, {}).get('borough', 'Unknown'))
-    
-    metric_map = {
-        "Revenu Total": 'revenue_total',
-        "Nombre de Trajets": 'trip_count',
-        "Distance Moyenne": 'distance_mean',
-        "Efficacité ($/km)": 'efficiency'
-    }
-    selected_metric = metric_map[metric_choice]
-    
-    top_zones_map = zone_geo_stats.nlargest(show_top_n, selected_metric)
-    
-    fig_3d = go.Figure()
-    
-    for _, row in top_zones_map.iterrows():
-        fig_3d.add_trace(go.Scatter3d(
-            x=[row['lon'], row['lon']],
-            y=[row['lat'], row['lat']],
-            z=[0, row[selected_metric]],
-            mode='lines',
-            line=dict(color='rgba(255, 0, 110, 0.25)', width=3),
-            showlegend=False,
-            hoverinfo='skip'
+        fig_hourly.add_trace(go.Scatter(
+            x=hourly_stats['hour'],
+            y=hourly_stats['total_amount'],
+            mode='lines+markers',
+            name='Revenu moyen',
+            line=dict(color='#ff006e', width=2),
+            marker=dict(size=5, color='#ff006e'),
+            fill='tozeroy',
+            fillcolor='rgba(255, 0, 110, 0.08)'
         ))
-    
-    fig_3d.add_trace(go.Scatter3d(
-        x=top_zones_map['lon'],
-        y=top_zones_map['lat'],
-        z=top_zones_map[selected_metric],
-        mode='markers+text',
-        marker=dict(
-            size=9,
-            color=top_zones_map[selected_metric],
-            colorscale=color_scheme,
-            showscale=True,
+        
+        fig_hourly.update_layout(
+            title={'text': '⏰ Rentabilité Horaire', 'font': {'size': 12, 'color': '#ffffff'}},
+            xaxis={'title': '', 'color': '#a8a8a8', 'gridcolor': '#252525', 'zerolinecolor': '#252525', 'tickfont': {'size': 9}},
+            yaxis={'title': '', 'color': '#a8a8a8', 'gridcolor': '#252525', 'zerolinecolor': '#252525', 'tickfont': {'size': 9}},
+            paper_bgcolor='rgba(0, 0, 0, 0)',
+            plot_bgcolor='rgba(0, 0, 0, 0)',
+            font={'color': '#ffffff'},
+            height=260,
+            showlegend=False,
+            hovermode='x unified',
+            margin=dict(l=30, r=10, t=35, b=25)
+        )
+        
+        st.plotly_chart(fig_hourly, use_container_width=True)
+        st.markdown('</div>', unsafe_allow_html=True)
+
+    # Heatmap
+    with col_eco2:
+        st.markdown('<div class="chart-container">', unsafe_allow_html=True)
+        
+        heatmap_data = df.groupby(['day_of_week', 'hour'])['total_amount'].mean().reset_index()
+        heatmap_pivot = heatmap_data.pivot(index='day_of_week', columns='hour', values='total_amount')
+        
+        fig_heatmap = go.Figure(data=go.Heatmap(
+            z=heatmap_pivot.values,
+            x=[f'{h}h' for h in range(24)],
+            y=['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'],
+            colorscale=[
+                [0, '#0a0a0a'],
+                [0.25, '#ff006e'],
+                [0.5, '#ff9500'],
+                [0.75, '#00d4ff'],
+                [1, '#00ff88']
+            ],
             colorbar=dict(
-                title=dict(text=metric_choice[:12], font=dict(color='#a8a8a8', size=9)),
+                title=dict(text='$/trajet', font=dict(color='#a8a8a8', size=9)),
                 tickfont=dict(color='#a8a8a8', size=8),
                 thickness=8,
-                len=0.6,
-                x=1.02
+                len=0.5
             ),
-            line=dict(color='white', width=0.5)
-        ),
-        text=top_zones_map['zone_name'],
-        textposition='top center',
-        textfont=dict(size=7, color='#ffffff'),
-        hovertemplate='<b>%{text}</b><br>' +
-                     f'{metric_choice}: %{{z:.2f}}<extra></extra>'
-    ))
-    
-    camera = dict(
-        eye=dict(x=1.8, y=1.8, z=1.5),
-        center=dict(x=0, y=0, z=0)
-    )
-    
-    fig_3d.update_layout(
-        scene=dict(
-            xaxis=dict(title='', backgroundcolor="#0a0a0a", gridcolor='#252525', showspikes=False, tickfont=dict(color='#6b6b6b', size=8)),
-            yaxis=dict(title='', backgroundcolor="#0a0a0a", gridcolor='#252525', showspikes=False, tickfont=dict(color='#6b6b6b', size=8)),
-            zaxis=dict(title='', backgroundcolor="#0a0a0a", gridcolor='#252525', showspikes=False, tickfont=dict(color='#6b6b6b', size=8)),
-            camera=camera,
-            aspectmode='manual',
-            aspectratio=dict(x=1, y=1, z=0.6),
-            bgcolor='#0a0a0a'
-        ),
-        paper_bgcolor='rgba(0, 0, 0, 0)',
-        font={'color': '#ffffff'},
-        height=380,
-        margin=dict(l=0, r=0, t=0, b=0),
-        showlegend=False
-    )
-    
-    st.plotly_chart(fig_3d, use_container_width=True)
-    st.markdown('</div>', unsafe_allow_html=True)
+            hovertemplate='%{y} %{x}<br>$%{z:.2f}<extra></extra>'
+        ))
+        
+        fig_heatmap.update_layout(
+            title={'text': '📅 Patterns Hebdo', 'font': {'size': 12, 'color': '#ffffff'}},
+            xaxis={'title': '', 'color': '#a8a8a8', 'tickfont': {'size': 8}},
+            yaxis={'title': '', 'color': '#a8a8a8', 'tickfont': {'size': 9}},
+            paper_bgcolor='rgba(0, 0, 0, 0)',
+            plot_bgcolor='rgba(0, 0, 0, 0)',
+            font={'color': '#ffffff'},
+            height=260,
+            margin=dict(l=35, r=10, t=35, b=25)
+        )
+        
+        st.plotly_chart(fig_heatmap, use_container_width=True)
+        st.markdown('</div>', unsafe_allow_html=True)
 
-st.markdown('<div class="section-divider"></div>', unsafe_allow_html=True)
+    # Top Zones
+    with col_eco3:
+        st.markdown('<div class="chart-container">', unsafe_allow_html=True)
+        
+        zone_stats = df.groupby('PULocationID').agg({
+            'total_amount': ['sum', 'mean'],
+            'trip_distance': 'mean',
+            'passenger_count': 'count'
+        }).reset_index()
+        zone_stats.columns = ['zone_id', 'revenue_total', 'revenue_mean', 'distance_mean', 'trip_count']
+        zone_stats['efficiency'] = zone_stats['revenue_mean'] / (zone_stats['distance_mean'] + 0.01)
+        zone_stats['zone_name'] = zone_stats['zone_id'].apply(
+            lambda x: zones_coords.get(x, {}).get('name', f'Zone {x}')[:16]
+        )
+        
+        top_zones = zone_stats.nlargest(6, 'revenue_total')
+        
+        fig_zones = go.Figure(data=[
+            go.Bar(
+                x=top_zones['revenue_mean'],
+                y=top_zones['zone_name'],
+                orientation='h',
+                marker=dict(
+                    color=top_zones['efficiency'],
+                    colorscale=[[0, '#ff006e'], [0.5, '#ff9500'], [1, '#00ff88']],
+                    showscale=False
+                ),
+                text=[f'${x:.0f}' for x in top_zones['revenue_mean']],
+                textposition='outside',
+                textfont=dict(color='#ffffff', size=9),
+                hovertemplate='<b>%{y}</b><br>$%{x:.2f}/trajet<extra></extra>'
+            )
+        ])
+        
+        fig_zones.update_layout(
+            title={'text': '🏆 Top Zones', 'font': {'size': 12, 'color': '#ffffff'}},
+            xaxis={'title': '', 'color': '#a8a8a8', 'gridcolor': '#252525', 'showticklabels': False},
+            yaxis={'title': '', 'color': '#ffffff', 'tickfont': {'size': 9}},
+            paper_bgcolor='rgba(0, 0, 0, 0)',
+            plot_bgcolor='rgba(0, 0, 0, 0)',
+            font={'color': '#ffffff'},
+            height=260,
+            margin=dict(l=90, r=35, t=35, b=25)
+        )
+        
+        st.plotly_chart(fig_zones, use_container_width=True)
+        st.markdown('</div>', unsafe_allow_html=True)
 
-from taxi_ml_predictions import create_ml_visualization
+# ============= SECTION 4: 3D MAP (EXPANDABLE) =============
+with st.expander(" Carte 3D Interactive", expanded=False):
+    st.markdown("""
+    <div class="section-title-container">
+        <div class="section-icon section-icon-map3d">🗺️</div>
+        <div class="section-title-text">
+            <p class="section-main-title section-main-title-map3d">Carte 3D Interactive</p>
+            <p class="section-subtitle">Visualisation géospatiale en trois dimensions</p>
+        </div>
+        <span class="section-badge badge-3d">3D VIEW</span>
+    </div>
+    """, unsafe_allow_html=True)
+    col_map3d, col_controls = st.columns([4, 1], gap="medium")
 
-# ============= PREDICTIVE INSIGHTS =============
-create_ml_visualization(df, zones_coords)
+    with col_controls:
+        st.markdown("""
+        <div class="guide-box">
+            <h4>Contrôles 3D</h4>
+        """, unsafe_allow_html=True)
+        
+        metric_choice = st.selectbox(
+            "📊 Métrique",
+            ["Revenu Total", "Nombre de Trajets", "Distance Moyenne", "Efficacité ($/km)"],
+            label_visibility="collapsed"
+        )
+        
+        show_top_n = st.slider("🔝 Top zones", 10, 50, 25)
+        
+        color_scheme = st.selectbox(
+            "🎨 Palette",
+            ["Plasma", "Viridis", "Turbo", "Hot"],
+            label_visibility="collapsed"
+        )
+        
+        st.markdown("</div>", unsafe_allow_html=True)
 
+    with col_map3d:
+        st.markdown('<div class="chart-container">', unsafe_allow_html=True)
+        
+        zone_geo_stats = df.groupby('PULocationID').agg({
+            'total_amount': ['sum', 'mean'],
+            'trip_distance': 'mean',
+            'passenger_count': 'count'
+        }).reset_index()
+        zone_geo_stats.columns = ['zone_id', 'revenue_total', 'revenue_mean', 'distance_mean', 'trip_count']
+        zone_geo_stats['efficiency'] = zone_geo_stats['revenue_mean'] / (zone_geo_stats['distance_mean'] + 0.01)
+        
+        zone_geo_stats['lat'] = zone_geo_stats['zone_id'].apply(lambda x: zones_coords.get(x, {}).get('lat', 40.7))
+        zone_geo_stats['lon'] = zone_geo_stats['zone_id'].apply(lambda x: zones_coords.get(x, {}).get('lon', -74.0))
+        zone_geo_stats['zone_name'] = zone_geo_stats['zone_id'].apply(lambda x: zones_coords.get(x, {}).get('name', f'Zone {x}'))
+        zone_geo_stats['borough'] = zone_geo_stats['zone_id'].apply(lambda x: zones_coords.get(x, {}).get('borough', 'Unknown'))
+        
+        metric_map = {
+            "Revenu Total": 'revenue_total',
+            "Nombre de Trajets": 'trip_count',
+            "Distance Moyenne": 'distance_mean',
+            "Efficacité ($/km)": 'efficiency'
+        }
+        selected_metric = metric_map[metric_choice]
+        
+        top_zones_map = zone_geo_stats.nlargest(show_top_n, selected_metric)
+        
+        fig_3d = go.Figure()
+        
+        for _, row in top_zones_map.iterrows():
+            fig_3d.add_trace(go.Scatter3d(
+                x=[row['lon'], row['lon']],
+                y=[row['lat'], row['lat']],
+                z=[0, row[selected_metric]],
+                mode='lines',
+                line=dict(color='rgba(255, 0, 110, 0.25)', width=3),
+                showlegend=False,
+                hoverinfo='skip'
+            ))
+        
+        fig_3d.add_trace(go.Scatter3d(
+            x=top_zones_map['lon'],
+            y=top_zones_map['lat'],
+            z=top_zones_map[selected_metric],
+            mode='markers+text',
+            marker=dict(
+                size=9,
+                color=top_zones_map[selected_metric],
+                colorscale=color_scheme,
+                showscale=True,
+                colorbar=dict(
+                    title=dict(text=metric_choice[:12], font=dict(color='#a8a8a8', size=9)),
+                    tickfont=dict(color='#a8a8a8', size=8),
+                    thickness=8,
+                    len=0.6,
+                    x=1.02
+                ),
+                line=dict(color='white', width=0.5)
+            ),
+            text=top_zones_map['zone_name'],
+            textposition='top center',
+            textfont=dict(size=7, color='#ffffff'),
+            hovertemplate='<b>%{text}</b><br>' +
+                         f'{metric_choice}: %{{z:.2f}}<extra></extra>'
+        ))
+        
+        camera = dict(
+            eye=dict(x=1.8, y=1.8, z=1.5),
+            center=dict(x=0, y=0, z=0)
+        )
+        
+        fig_3d.update_layout(
+            scene=dict(
+                xaxis=dict(title='', backgroundcolor="#0a0a0a", gridcolor='#252525', showspikes=False, tickfont=dict(color='#6b6b6b', size=8)),
+                yaxis=dict(title='', backgroundcolor="#0a0a0a", gridcolor='#252525', showspikes=False, tickfont=dict(color='#6b6b6b', size=8)),
+                zaxis=dict(title='', backgroundcolor="#0a0a0a", gridcolor='#252525', showspikes=False, tickfont=dict(color='#6b6b6b', size=8)),
+                camera=camera,
+                aspectmode='manual',
+                aspectratio=dict(x=1, y=1, z=0.6),
+                bgcolor='#0a0a0a'
+            ),
+            paper_bgcolor='rgba(0, 0, 0, 0)',
+            font={'color': '#ffffff'},
+            height=380,
+            margin=dict(l=0, r=0, t=0, b=0),
+            showlegend=False
+        )
+        
+        st.plotly_chart(fig_3d, use_container_width=True)
+        st.markdown('</div>', unsafe_allow_html=True)
+
+# ============= SECTION 5: ML PREDICTIONS (EXPANDABLE) =============
+with st.expander(" Intelligence Artificielle & Prédictions", expanded=False):
+    st.markdown("""
+    <div class="section-title-container">
+        <div class="section-icon section-icon-ml">🤖</div>
+        <div class="section-title-text">
+            <p class="section-main-title section-main-title-ml">Intelligence Artificielle & Prédictions</p>
+            <p class="section-subtitle">Machine Learning pour prédire les pourboires et segmenter les clients</p>
+        </div>
+        <span class="section-badge badge-ml">● ML</span>
+    </div>
+    """, unsafe_allow_html=True)
+    from taxi_ml_predictions import create_ml_visualization
+    create_ml_visualization(df, zones_coords)
 
 # Footer
 st.markdown("""
 <div style="text-align: center; padding: 1rem 0; color: #6b6b6b; border-top: 1px solid #252525; margin-top: 1.5rem; font-size: 0.75rem;">
     <p>NYC Taxi Analytics Dashboard © 2024 | Powered by Streamlit & D3.js</p>
+    <p style="margin-top: 0.25rem;">Projet réalisé par <strong style="color: #8b5cf6;">Anas JEBALI</strong> & <strong style="color: #8b5cf6;">Rania CHIRANE</strong></p>
 </div>
 """, unsafe_allow_html=True)
